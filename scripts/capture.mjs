@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// petry — local Markdown knowledge log for oil & gas field insights.
+// petry — local Markdown knowledge vault for oil & gas field insights.
 //
 // Zero dependencies. Node 18+. Cross-platform. Every observation is stored in a
-// schema that maps 1:1 to a Petry context-graph observation, so the log can be
+// schema that maps 1:1 to a Petry context-graph observation, so the vault can be
 // replayed into the paid MCP later (see ../UPGRADE.md).
 //
 // Commands:
@@ -12,7 +12,7 @@
 //   finalize  [--session <id>]             # dedupe + summary (Phase 2 session hook calls this). Never fails.
 //   where                                  # print the resolved store directory
 //
-// Store location: $PETRY_INSIGHTS_DIR, else <cwd>/.petry/insights
+// Vault location: $PETRY_VAULT_DIR (or legacy $PETRY_INSIGHTS_DIR), else <cwd>/.petry/vault
 
 import fs from "node:fs";
 import path from "node:path";
@@ -28,10 +28,10 @@ const OBSERVATION_TYPES = [
   "preference",
 ];
 
-const storeDir = () =>
-  process.env.PETRY_INSIGHTS_DIR
-    ? path.resolve(process.env.PETRY_INSIGHTS_DIR)
-    : path.resolve(process.cwd(), ".petry", "insights");
+const storeDir = () => {
+  const env = process.env.PETRY_VAULT_DIR || process.env.PETRY_INSIGHTS_DIR;
+  return env ? path.resolve(env) : path.resolve(process.cwd(), ".petry", "vault");
+};
 
 const slugify = (s) =>
   s

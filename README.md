@@ -5,9 +5,11 @@ Two verb skills every oil & gas team wants from an AI agent, free and with no ba
 | Skill | What it does |
 |---|---|
 | **`/get-well-production <well>`** | Pulls a well's production data **from whatever you're connected to** (your files, a database, an MCP) and renders it as a self-contained production chart — or a fuller profile card with metadata + KPIs. |
-| **`/capture-insight <well>: <what you saw>`** | Saves one field insight to a local Markdown knowledge log, in a schema that upgrades cleanly to a real knowledge base. |
+| **`/capture <well>: <what you saw>`** | Saves one field insight to your local Markdown knowledge vault — and it lights up on that well's production profile (events become markers on the chart). Schema upgrades cleanly to a real knowledge base. |
 
-> Skills are verb-named, so you invoke them bare: `/get-well-production`, `/capture-insight`. (Claude Code also lists a namespaced form, `/petry:get-well-production`, to disambiguate if another plugin ever ships the same verb — but you don't type it.)
+> Skills are verb-named, so you invoke them bare: `/get-well-production`, `/capture`. (Claude Code also lists a namespaced form, `/petry:get-well-production`, to disambiguate if another plugin ever ships the same verb — but you don't type it.)
+
+**The loop:** `/capture` writes to a local vault → `/get-well-production` reads that vault and surfaces the captured events right on the well's chart. Your own single-player knowledge vault, no backend. (The paid Petry MCP adds real graph parsing + multiplayer.)
 
 ## Install
 
@@ -33,8 +35,8 @@ From GitHub:
 
 ## How it works
 
-- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). It fills a self-contained HTML preview for a quick look, or scaffolds the actual React components when you want the interactive versions.
-- **Insights** — `capture-insight` appends one observation per fact to `.petry/insights/<well>.md`. The store is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`.
+- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). It fills a self-contained HTML preview for a quick look, or scaffolds the actual React components when you want the interactive versions. Before it draws, it reads the well's vault and adds its captured events as numbered markers on the chart plus an activity list on the card.
+- **Vault** — `capture` appends one observation per fact to `.petry/vault/<well>.md`. The vault is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`. Plain Markdown you can read, commit, or keep private.
 
 ## Layout
 
@@ -42,14 +44,14 @@ From GitHub:
 .claude-plugin/plugin.json        plugin manifest
 .claude-plugin/marketplace.json   lets this repo act as a marketplace ("aai-agency")
 skills/get-well-production/        data-sourcing + chart skill + self-contained HTML preview
-skills/capture-insight/            insight-capture skill
-scripts/capture.mjs                the local knowledge-log store (zero-dep Node)
-UPGRADE.md                         moving the local log into the Petry knowledge base
+skills/capture/                    insight-capture skill (writes the vault)
+scripts/capture.mjs                the local knowledge vault store (zero-dep Node)
+UPGRADE.md                         moving the local vault into the Petry knowledge base
 ```
 
 ## Upgrading to a real knowledge base
 
-The local log is perfect for one person on one machine. When you want temporal history, hybrid search, per-asset AI summaries, and team access control, the same observations replay into the paid **Petry context-graph** MCP — nothing is re-typed. See [`UPGRADE.md`](./UPGRADE.md).
+The local vault is perfect for one person on one machine. When you want temporal history, hybrid search, per-asset AI summaries, and multiplayer access, the same observations replay into the paid **Petry context-graph** MCP — nothing is re-typed. See [`UPGRADE.md`](./UPGRADE.md).
 
 ## Coming next
 
