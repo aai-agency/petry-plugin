@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "petry",
-      "source": "./petry",
+      "source": "./",
       "description": "Get a well's production data (from whatever you're connected to) as a production chart, and capture field insights to a local knowledge log."
     }
   ]

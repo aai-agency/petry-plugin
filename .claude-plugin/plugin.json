@@ -7,7 +7,7 @@
     "email": "husam@aai.agency",
     "url": "https://aai.agency"
   },
-  "homepage": "https://github.com/aai-agency/plugins",
+  "homepage": "https://github.com/aai-agency/petry-plugin",
   "license": "MIT",
   "keywords": ["oil-gas", "production", "decline-curve", "well", "insights", "og-components"]
 }
