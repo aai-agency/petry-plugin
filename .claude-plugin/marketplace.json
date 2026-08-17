@@ -1,0 +1,16 @@
+{
+  "name": "aai-agency",
+  "description": "AAI Agency plugins for Claude Code. Free oil & gas tooling — production charts from your own data, and local insight capture.",
+  "owner": {
+    "name": "AAI Agency",
+    "email": "husam@aai.agency",
+    "url": "https://aai.agency"
+  },
+  "plugins": [
+    {
+      "name": "petry",
+      "source": "./petry",
+      "description": "Get a well's production data (from whatever you're connected to) as a production chart, and capture field insights to a local knowledge log."
+    }
+  ]
+}

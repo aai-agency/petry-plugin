@@ -1,0 +1,217 @@
+<!doctype html>
+<!--
+  petry — self-contained production preview. Fully offline (no CDN, no token).
+  Fill the double-brace placeholders and open in a browser. This comment does NOT
+  contain the literal tokens, so replacing them will only touch the real sites:
+    TITLE            -> the well name. Replace ALL (two sites: <title> and the name div).
+    CHART_DATA_JSON  -> single-line JSON matching the CHART_DATA contract below.
+                        One site only: "const DATA = ...".
+
+  CHART_DATA contract:
+  {
+    "well":   { "name": "HOWARD 4N-28HZ", "operator": "OCCIDENTAL", "status": "producing",
+                "basin": "DJ", "county": "WELD", "state": "CO", "formation": "Codell" },
+    "unit":   "bbl/d",                          // y-axis label for the oil series
+    "note":   "Representative sample values",   // optional; shows a banner when data is synthesized
+    "kpis":   [ { "label": "Peak Oil", "value": 812, "unit": "bbl/d" }, ... ],   // optional; auto-derived if omitted
+    "series": {
+      "months": ["2024-01","2024-02", ...],     // x labels
+      "oil":    [812, 690, ...],                // numbers, same length as months
+      "gas":    [1400, 1210, ...],              // optional
+      "water":  [120, 160, ...]                 // optional
+    }
+  }
+  Only "well.name" and "series.months" + "series.oil" are required; everything else is optional.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{TITLE}} — production preview</title>
+<link rel="icon" href="data:," />
+<style>
+  :root {
+    --bg: #f7f8fa; --panel: #ffffff; --ink: #14181f; --muted: #5b6472;
+    --line: #e6e9ef; --oil: #10b981; --gas: #ef4444; --water: #3b82f6;
+    --accent: #0f766e; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d1117; --panel:#161b22; --ink:#e6edf3; --muted:#9aa4b2;
+            --line:#232a34; --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 20px 40px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden; }
+  .head { padding: 20px 22px 8px; }
+  .name { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .badges { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: transparent; }
+  .badge.status { color: #065f46; background: rgba(16,185,129,.12); border-color: transparent; text-transform: capitalize; }
+  .note { margin: 10px 22px 0; padding: 8px 12px; font-size: 12.5px; border-radius: 8px;
+    background: rgba(234,179,8,.12); color: #92650a; border: 1px solid rgba(234,179,8,.25); }
+  @media (prefers-color-scheme: dark) { .note { color:#e8c877; } .badge.status{ color:#6ee7b7; } }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+    gap: 1px; background: var(--line); margin: 18px 0 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .kpi { background: var(--panel); padding: 14px 18px; }
+  .kpi .v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi .l { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+  .chartwrap { padding: 16px 14px 22px; }
+  .legend { display: flex; gap: 16px; padding: 0 8px 8px; flex-wrap: wrap; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
+  .lg.off { opacity: .38; text-decoration: line-through; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; }
+  canvas { width: 100%; display: block; }
+  #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--panel);
+    padding: 7px 10px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .08s; white-space: nowrap;
+    font-variant-numeric: tabular-nums; box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+      <div class="name" id="wellName">{{TITLE}}</div>
+      <div class="sub" id="wellSub"></div>
+      <div class="badges" id="badges"></div>
+    </div>
+    <div class="note" id="note" style="display:none"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="chartwrap">
+      <div class="legend" id="legend"></div>
+      <canvas id="chart" height="320" aria-label="Production chart"></canvas>
+    </div>
+  </div>
+</div>
+<div id="tip"></div>
+<script>
+  const DATA = {{CHART_DATA_JSON}};
+
+  const fmt = (n) => {
+    if (n == null || isNaN(n)) return "—";
+    const a = Math.abs(n);
+    if (a >= 1e6) return (n/1e6).toFixed(1) + "M";
+    if (a >= 1e3) return (n/1e3).toFixed(1) + "k";
+    if (a >= 100) return Math.round(n).toLocaleString();
+    return (Math.round(n*10)/10).toLocaleString();
+  };
+
+  const SERIES = [
+    { key: "oil",   label: "Oil",   color: getComputedStyle(document.documentElement).getPropertyValue("--oil").trim() || "#10b981" },
+    { key: "gas",   label: "Gas",   color: getComputedStyle(document.documentElement).getPropertyValue("--gas").trim() || "#ef4444" },
+    { key: "water", label: "Water", color: getComputedStyle(document.documentElement).getPropertyValue("--water").trim() || "#3b82f6" },
+  ].filter((s) => Array.isArray(DATA?.series?.[s.key]) && DATA.series[s.key].length);
+
+  // Header
+  const w = DATA.well || { name: document.getElementById("wellName").textContent };
+  document.getElementById("wellName").textContent = w.name || "Well";
+  document.title = (w.name || "Well") + " — production preview";
+  const subBits = [w.operator, w.formation].filter(Boolean).join(" · ");
+  document.getElementById("wellSub").textContent = subBits;
+  const badges = [];
+  if (w.status) badges.push(`<span class="badge status">${w.status}</span>`);
+  for (const k of ["basin","county","state"]) if (w[k]) badges.push(`<span class="badge">${w[k]}</span>`);
+  document.getElementById("badges").innerHTML = badges.join("");
+  if (DATA.note) { const n = document.getElementById("note"); n.style.display="block"; n.textContent = DATA.note; }
+
+  // KPIs — use provided, else derive from oil series
+  let kpis = DATA.kpis;
+  if (!Array.isArray(kpis) || !kpis.length) {
+    const oil = DATA.series?.oil || [];
+    const unit = DATA.unit || "bbl/d";
+    if (oil.length) {
+      const peak = Math.max(...oil), latest = oil[oil.length-1];
+      const cum = oil.reduce((a,b)=>a+(b||0),0);
+      kpis = [
+        { label: "Peak Oil", value: peak, unit },
+        { label: "Latest", value: latest, unit },
+        { label: "Months", value: oil.length, unit: "" },
+        { label: "Cum (sum)", value: cum, unit },
+      ];
+    } else kpis = [];
+  }
+  document.getElementById("kpis").innerHTML = kpis.map((k) =>
+    `<div class="kpi"><div class="v">${fmt(k.value)}${k.unit?` <span style="font-size:12px;color:var(--muted);font-weight:600">${k.unit}</span>`:""}</div><div class="l">${k.label}</div></div>`
+  ).join("");
+
+  // Legend (toggle series)
+  const off = new Set();
+  const legendEl = document.getElementById("legend");
+  legendEl.innerHTML = SERIES.map((s) =>
+    `<span class="lg" data-k="${s.key}"><span class="sw" style="background:${s.color}"></span>${s.label}</span>`).join("");
+  legendEl.querySelectorAll(".lg").forEach((el) => el.addEventListener("click", () => {
+    const k = el.dataset.k; if (off.has(k)) { off.delete(k); el.classList.remove("off"); }
+    else { off.add(k); el.classList.add("off"); } draw();
+  }));
+
+  // Chart
+  const cv = document.getElementById("chart");
+  const ctx = cv.getContext("2d");
+  const months = DATA.series?.months || [];
+  const tip = document.getElementById("tip");
+  let geom = null;
+
+  const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const draw = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const W = cv.clientWidth, H = 320;
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,W,H);
+    const padL = 52, padR = 14, padT = 14, padB = 30;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const active = SERIES.filter((s)=>!off.has(s.key));
+    let max = 0;
+    for (const s of active) for (const v of DATA.series[s.key]) if (v>max) max=v;
+    max = max || 1;
+    const n = months.length || 1;
+    const x = (i) => padL + (n<=1 ? plotW/2 : (i/(n-1))*plotW);
+    const y = (v) => padT + plotH - (v/max)*plotH;
+
+    // grid + y labels
+    ctx.strokeStyle = cssVar("--line") || "#e6e9ef"; ctx.fillStyle = cssVar("--muted") || "#5b6472";
+    ctx.lineWidth = 1; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    const ticks = 4;
+    for (let t=0;t<=ticks;t++){ const val = max*(t/ticks); const yy = y(val);
+      ctx.globalAlpha=.6; ctx.beginPath(); ctx.moveTo(padL,yy); ctx.lineTo(W-padR,yy); ctx.stroke(); ctx.globalAlpha=1;
+      ctx.fillText(fmt(val), padL-8, yy); }
+    // x labels (thinned)
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    const step = Math.ceil(n/6);
+    for (let i=0;i<n;i+=step){ ctx.fillText(String(months[i]).slice(2), x(i), padT+plotH+8); }
+
+    // series lines
+    geom = { active, x, y, n };
+    for (const s of active) {
+      const arr = DATA.series[s.key];
+      ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.lineJoin="round"; ctx.beginPath();
+      let started=false;
+      for (let i=0;i<n;i++){ const v=arr[i]; if(v==null||isNaN(v))continue; const px=x(i),py=y(v);
+        if(!started){ctx.moveTo(px,py);started=true;} else ctx.lineTo(px,py); }
+      ctx.stroke();
+    }
+  };
+
+  const nearest = (mx) => {
+    if (!geom) return -1; let best=-1, bd=1e9;
+    for (let i=0;i<geom.n;i++){ const d=Math.abs(geom.x(i)-mx); if(d<bd){bd=d;best=i;} }
+    return bd<=24?best:-1;
+  };
+  cv.addEventListener("mousemove", (e) => {
+    const r = cv.getBoundingClientRect(); const i = nearest(e.clientX-r.left);
+    if (i<0){ tip.style.opacity=0; return; }
+    const rows = geom.active.map((s)=>`${s.label}: ${fmt(DATA.series[s.key][i])}`).join("<br>");
+    tip.innerHTML = `<strong>${months[i]||("#"+i)}</strong><br>${rows}`;
+    tip.style.left = (e.clientX+14)+"px"; tip.style.top = (e.clientY+14)+"px"; tip.style.opacity=1;
+  });
+  cv.addEventListener("mouseleave", () => { tip.style.opacity=0; });
+
+  window.addEventListener("resize", draw);
+  draw();
+</script>
+</body>
+</html>
