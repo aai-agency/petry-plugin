@@ -19,9 +19,16 @@
       "oil":    [812, 690, ...],                // numbers, same length as months
       "gas":    [1400, 1210, ...],              // optional
       "water":  [120, 160, ...]                 // optional
-    }
+    },
+    "activity": [                                // optional; pulled from the local vault (.petry/vault/<well>.md)
+      { "type": "event", "date": "2024-08", "text": "ESP failed; well shut in 3 days" },
+      { "type": "decision", "date": "2024-11", "text": "deferred recompletion to next quarter" },
+      { "type": "measurement", "date": "2025-02", "text": "GOR up to 3.1 mscf/bbl" }
+    ]
   }
   Only "well.name" and "series.months" + "series.oil" are required; everything else is optional.
+  Activity items whose type is event/decision/correction AND whose date lands inside the series
+  are drawn as numbered markers on the chart; every activity item is listed under the chart.
 -->
 <html lang="en">
 <head>
@@ -60,12 +67,26 @@
   .kpi { background: var(--panel); padding: 14px 18px; }
   .kpi .v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .kpi .l { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
-  .chartwrap { padding: 16px 14px 22px; }
+  .chartwrap { padding: 16px 14px 8px; }
   .legend { display: flex; gap: 16px; padding: 0 8px 8px; flex-wrap: wrap; }
   .lg { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
   .lg.off { opacity: .38; text-decoration: line-through; }
   .sw { width: 12px; height: 12px; border-radius: 3px; }
   canvas { width: 100%; display: block; }
+  .activity { padding: 4px 22px 20px; }
+  .act-hd { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em;
+    font-weight: 600; margin: 4px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .act-hd .from { text-transform: none; letter-spacing: 0; font-weight: 500; opacity: .8; }
+  .act-item { display: grid; grid-template-columns: 22px 96px auto; gap: 10px; align-items: baseline;
+    padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+  .act-num, .act-dot { grid-column: 1; justify-self: center; }
+  .act-num { width: 18px; height: 18px; border-radius: 999px; color: #fff; font-size: 11px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; align-self: center; }
+  .act-dot { width: 8px; height: 8px; border-radius: 999px; align-self: center; margin-top: 5px; }
+  .act-meta { grid-column: 2; display: flex; flex-direction: column; gap: 2px; }
+  .act-badge { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; font-weight: 700; }
+  .act-date { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .act-text { grid-column: 3; color: var(--ink); }
   #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--panel);
     padding: 7px 10px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .08s; white-space: nowrap;
     font-variant-numeric: tabular-nums; box-shadow: var(--shadow); }
@@ -85,6 +106,7 @@
       <div class="legend" id="legend"></div>
       <canvas id="chart" height="320" aria-label="Production chart"></canvas>
     </div>
+    <div class="activity" id="activity" style="display:none"></div>
   </div>
 </div>
 <div id="tip"></div>
@@ -99,22 +121,35 @@
     if (a >= 100) return Math.round(n).toLocaleString();
     return (Math.round(n*10)/10).toLocaleString();
   };
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+  // Observation type -> color + label. event/decision/correction also mark the chart.
+  const TYPE_META = {
+    event:       { c: "#f59e0b", label: "Event" },
+    decision:    { c: "#8b5cf6", label: "Decision" },
+    correction:  { c: "#ef4444", label: "Correction" },
+    measurement: { c: "#10b981", label: "Measurement" },
+    instruction: { c: "#0ea5e9", label: "Instruction" },
+    preference:  { c: "#0ea5e9", label: "Preference" },
+    note:        { c: "#64748b", label: "Note" },
+  };
+  const MARKER_TYPES = new Set(["event", "decision", "correction"]);
 
   const SERIES = [
-    { key: "oil",   label: "Oil",   color: getComputedStyle(document.documentElement).getPropertyValue("--oil").trim() || "#10b981" },
-    { key: "gas",   label: "Gas",   color: getComputedStyle(document.documentElement).getPropertyValue("--gas").trim() || "#ef4444" },
-    { key: "water", label: "Water", color: getComputedStyle(document.documentElement).getPropertyValue("--water").trim() || "#3b82f6" },
+    { key: "oil",   label: "Oil",   color: "#10b981" },
+    { key: "gas",   label: "Gas",   color: "#ef4444" },
+    { key: "water", label: "Water", color: "#3b82f6" },
   ].filter((s) => Array.isArray(DATA?.series?.[s.key]) && DATA.series[s.key].length);
 
   // Header
   const w = DATA.well || { name: document.getElementById("wellName").textContent };
   document.getElementById("wellName").textContent = w.name || "Well";
   document.title = (w.name || "Well") + " — production preview";
-  const subBits = [w.operator, w.formation].filter(Boolean).join(" · ");
-  document.getElementById("wellSub").textContent = subBits;
+  document.getElementById("wellSub").textContent = [w.operator, w.formation].filter(Boolean).join(" · ");
   const badges = [];
-  if (w.status) badges.push(`<span class="badge status">${w.status}</span>`);
-  for (const k of ["basin","county","state"]) if (w[k]) badges.push(`<span class="badge">${w[k]}</span>`);
+  if (w.status) badges.push(`<span class="badge status">${esc(w.status)}</span>`);
+  for (const k of ["basin","county","state"]) if (w[k]) badges.push(`<span class="badge">${esc(w[k])}</span>`);
   document.getElementById("badges").innerHTML = badges.join("");
   if (DATA.note) { const n = document.getElementById("note"); n.style.display="block"; n.textContent = DATA.note; }
 
@@ -135,7 +170,7 @@
     } else kpis = [];
   }
   document.getElementById("kpis").innerHTML = kpis.map((k) =>
-    `<div class="kpi"><div class="v">${fmt(k.value)}${k.unit?` <span style="font-size:12px;color:var(--muted);font-weight:600">${k.unit}</span>`:""}</div><div class="l">${k.label}</div></div>`
+    `<div class="kpi"><div class="v">${fmt(k.value)}${k.unit?` <span style="font-size:12px;color:var(--muted);font-weight:600">${esc(k.unit)}</span>`:""}</div><div class="l">${esc(k.label)}</div></div>`
   ).join("");
 
   // Legend (toggle series)
@@ -148,12 +183,48 @@
     else { off.add(k); el.classList.add("off"); } draw();
   }));
 
-  // Chart
+  // Chart + vault activity
   const cv = document.getElementById("chart");
   const ctx = cv.getContext("2d");
   const months = DATA.series?.months || [];
   const tip = document.getElementById("tip");
   let geom = null;
+
+  const monthIndexOf = (date) => {
+    if (!date) return -1;
+    const ym = String(date).slice(0,7);
+    return months.findIndex((m) => String(m).slice(0,7) === ym);
+  };
+
+  // Activity from the local vault. event/decision/correction inside the series become numbered markers.
+  const activity = Array.isArray(DATA.activity) ? DATA.activity : [];
+  const marked = activity
+    .map((a) => ({ a, mi: monthIndexOf(a.date) }))
+    .filter((o) => o.mi >= 0 && MARKER_TYPES.has(o.a.type))
+    .sort((x, y) => x.mi - y.mi);
+  marked.forEach((o, k) => { o.a._num = k + 1; });
+  const markers = marked.map((o) => ({ i: o.mi, num: o.a._num, color: (TYPE_META[o.a.type]||TYPE_META.note).c }));
+
+  // Activity list, newest first
+  const actEl = document.getElementById("activity");
+  if (activity.length) {
+    const sorted = activity.slice().sort((a,b) => String(b.date||"").localeCompare(String(a.date||"")));
+    const rows = sorted.map((a) => {
+      const m = TYPE_META[a.type] || TYPE_META.note;
+      const marker = a._num
+        ? `<span class="act-num" style="background:${m.c}">${a._num}</span>`
+        : `<span class="act-dot" style="background:${m.c}"></span>`;
+      return `<div class="act-item">${marker}` +
+             `<span class="act-meta"><span class="act-badge" style="color:${m.c}">${m.label}</span>` +
+             `<span class="act-date">${esc(a.date||"")}</span></span>` +
+             `<span class="act-text">${esc(a.text)}</span></div>`;
+    }).join("");
+    const markCount = marked.length;
+    actEl.style.display = "block";
+    actEl.innerHTML =
+      `<div class="act-hd">Activity <span class="from">· ${activity.length} from your vault` +
+      (markCount ? `, ${markCount} on the chart` : "") + `</span></div>` + rows;
+  }
 
   const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
@@ -162,7 +233,7 @@
     const W = cv.clientWidth, H = 320;
     cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,W,H);
-    const padL = 52, padR = 14, padT = 14, padB = 30;
+    const padL = 52, padR = 14, padT = markers.length ? 26 : 14, padB = 30;
     const plotW = W - padL - padR, plotH = H - padT - padB;
     const active = SERIES.filter((s)=>!off.has(s.key));
     let max = 0;
@@ -183,6 +254,18 @@
     ctx.textAlign="center"; ctx.textBaseline="top";
     const step = Math.ceil(n/6);
     for (let i=0;i<n;i+=step){ ctx.fillText(String(months[i]).slice(2), x(i), padT+plotH+8); }
+
+    // event markers (behind the series lines): dashed vertical + numbered dot on top
+    for (const mk of markers) {
+      const px = x(mk.i);
+      ctx.strokeStyle = mk.color; ctx.globalAlpha = .5; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, padT+plotH); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.fillStyle = mk.color; ctx.beginPath(); ctx.arc(px, padT-13, 8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#fff"; ctx.font = "bold 10px -apple-system, sans-serif";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(String(mk.num), px, padT-13);
+    }
 
     // series lines
     geom = { active, x, y, n };
@@ -205,7 +288,7 @@
     const r = cv.getBoundingClientRect(); const i = nearest(e.clientX-r.left);
     if (i<0){ tip.style.opacity=0; return; }
     const rows = geom.active.map((s)=>`${s.label}: ${fmt(DATA.series[s.key][i])}`).join("<br>");
-    tip.innerHTML = `<strong>${months[i]||("#"+i)}</strong><br>${rows}`;
+    tip.innerHTML = `<strong>${esc(months[i]||("#"+i))}</strong><br>${rows}`;
     tip.style.left = (e.clientX+14)+"px"; tip.style.top = (e.clientY+14)+"px"; tip.style.opacity=1;
   });
   cv.addEventListener("mouseleave", () => { tip.style.opacity=0; });

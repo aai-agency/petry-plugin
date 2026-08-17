@@ -74,15 +74,25 @@ shape: `{ id, fluidType: "oil"|"gas"|"water", curveType, unit, frequency, data: 
 ## Path A — self-contained preview
 
 1. Read `assets/preview.html` (relative to this skill).
-2. Build a `CHART_DATA` JSON object (contract is documented at the top of that
-   file): well header (name/operator/status/basin), KPIs, and monthly
-   oil/gas/water series. If the user didn't give production numbers, say you're
-   using representative sample values and make that visible in the output —
-   never present synthesized numbers as if they were the user's real data.
-3. Replace `{{TITLE}}` and `{{CHART_DATA_JSON}}` (single-line JSON). Nothing else
-   changes; the chart draws itself in the browser from the series.
-4. Save the filled file and open it / present it as an artifact. It's fully
-   offline (no CDN, no token).
+2. **Pull this well's captured insights from the local vault** so they surface on
+   the profile — this closing of the loop is the point:
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" export --asset "<well>"
+   ```
+   It returns `{ observations: [{ type, text, valid_at, ... }] }`. Map each to an
+   `activity` entry `{ type, date: <valid_at>, text }`. If the vault has nothing
+   for this well, omit `activity` — the chart still renders fine.
+3. Build a `CHART_DATA` JSON object (contract at the top of `preview.html`): well
+   header (name/operator/status/basin), KPIs, monthly oil/gas/water series, and
+   the `activity` from step 2. Events / decisions / corrections whose date lands
+   inside the series become **numbered markers on the chart**; every activity
+   item is listed under it. If the user didn't give production numbers, say you're
+   using representative sample values and make that visible — never present
+   synthesized numbers as if they were the user's real data.
+4. Replace `{{TITLE}}` (both sites) and `{{CHART_DATA_JSON}}` (single-line JSON).
+   Nothing else changes; the chart and markers draw themselves in the browser.
+5. Save the filled file and open it / present it as an artifact. Fully offline
+   (no CDN, no token).
 
 This preview is a fast look, not the real deck.gl map. For the interactive map,
 lasso selection, overlays, and the editable decline curve, go to Path B — tell
@@ -189,6 +199,6 @@ Wire Tailwind v4 (`@tailwindcss/vite` plugin + `@import "tailwindcss"; @import "
 
 ## Related
 
-Capturing what the user *learns* while looking at these charts → the
-**capture-insight** skill / `/capture-insight` (logs asserted well insights to a
-local knowledge log).
+Capturing what the user *learns* while looking at these charts → the **capture**
+skill / `/capture` (logs asserted well insights to the local vault — they come
+back as markers here next time).
