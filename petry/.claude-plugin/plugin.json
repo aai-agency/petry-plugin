@@ -1,0 +1,13 @@
+{
+  "name": "petry",
+  "description": "Free oil & gas toolkit for Claude Code. Pull a well's production data from whatever you're connected to and render it as a production chart, and capture field insights to a local knowledge log. No backend, no keys.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AAI Agency",
+    "email": "husam@aai.agency",
+    "url": "https://aai.agency"
+  },
+  "homepage": "https://github.com/aai-agency/plugins",
+  "license": "MIT",
+  "keywords": ["oil-gas", "production", "decline-curve", "well", "insights", "og-components"]
+}
