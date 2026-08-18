@@ -20,17 +20,20 @@ const OGPKG =
   process.env.OG_COMPONENTS_DIR ||
   join(homedir(), "Documents/aai-agency/os/aai-og-components/packages/og-components");
 const lineChartSrc = join(OGPKG, "src/components/line-chart/line-chart.tsx");
-if (!existsSync(lineChartSrc)) {
+const declineCurveSrc = join(OGPKG, "src/components/decline-curve/decline-curve.tsx");
+if (!existsSync(lineChartSrc) || !existsSync(declineCurveSrc)) {
   console.error(`og-components source not found at ${OGPKG}. Set OG_COMPONENTS_DIR.`);
   process.exit(1);
 }
 
 // A barrel that re-exports only the components we render, from source — so the
-// deck.gl/mapbox Map never enters the graph.
+// deck.gl/mapbox Map never enters the graph. (DeclineCurve's "wasm-engine" is a
+// pure-TS facade, so this stays self-contained.)
 const barrel = R(".og-barrel.mjs");
 writeFileSync(
   barrel,
-  `export { LineChart, ProductionChart } from ${JSON.stringify(lineChartSrc)};\n`
+  `export { LineChart, ProductionChart } from ${JSON.stringify(lineChartSrc)};\n` +
+    `export { DeclineCurve } from ${JSON.stringify(declineCurveSrc)};\n`
 );
 
 const result = await esbuild.build({
