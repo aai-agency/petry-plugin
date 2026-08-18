@@ -5,6 +5,8 @@
 node_modules/
 dist/
 build/.og-barrel.mjs
+build/.tw-input.css
+build/.tw-out.css
 
 # OS / editor
 .DS_Store
