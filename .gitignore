@@ -4,6 +4,7 @@
 # deps / build (plugins ship source; none of this belongs in the repo)
 node_modules/
 dist/
+build/.og-barrel.mjs
 
 # OS / editor
 .DS_Store

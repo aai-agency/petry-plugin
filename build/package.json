@@ -1,0 +1,12 @@
+{
+  "name": "petry-chart-bundle-build",
+  "private": true,
+  "type": "module",
+  "description": "Dev-time build: bundles the real @aai-agency/og-components chart into the self-contained artifact the petry plugin ships. Resolves the library from the local aai-og-components workspace (0.4.1 is not yet on npm). Run `pnpm i && pnpm build`; the output (skills/get-well-production/assets/preview.html) is committed so users never build.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
