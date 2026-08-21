@@ -458,14 +458,14 @@ lucide-react/dist/esm/lucide-react.mjs:
   // KPIs
   let kpis = DATA.kpis;
   if (!Array.isArray(kpis) || !kpis.length) {
-    const oil = (DATA.series && DATA.series.oil) || [];
+    const ser = DATA.series || {};
     const unit = DATA.unit || "bbl/d";
-    kpis = oil.length ? [
-      { label:"Peak Oil", value: Math.max(...oil), unit },
-      { label:"Latest", value: oil[oil.length-1], unit },
-      { label:"Months", value: oil.length, unit:"" },
-      { label:"Cum (sum)", value: oil.reduce((a,b)=>a+(b||0),0), unit },
-    ] : [];
+    const last = (arr) => (Array.isArray(arr) && arr.length ? arr[arr.length-1] : null);
+    kpis = [
+      { label:"Last Oil",   value: last(ser.oil),   unit },
+      { label:"Last Water", value: last(ser.water), unit },
+      { label:"Last Gas",   value: last(ser.gas),   unit:"mcf/d" },
+    ].filter((k) => k.value != null);
   }
   document.getElementById("kpis").innerHTML = kpis.map((k) =>
     `<div class="kpi"><div class="v">${fmt(k.value)}${k.unit?` <span style="font-size:12px;color:var(--muted);font-weight:600">${esc(k.unit)}</span>`:""}</div><div class="l">${esc(k.label)}</div></div>`

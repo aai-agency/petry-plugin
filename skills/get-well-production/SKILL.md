@@ -33,8 +33,9 @@ in this order:
 
 Never invent production numbers. Partial data is fine — chart what you have and
 say what's missing. Normalize to monthly oil / gas / water series with clear
-units; compute basic KPIs (peak oil, latest rate, months on production,
-cumulative) if the source didn't provide them.
+units. The card's default KPI row shows the **latest oil / water / gas** rate;
+pass a custom `kpis` array (`{ label, value, unit }[]`) only if the user asks for
+different metrics.
 
 For a **profile card** (the fuller view the user may ask for as "well profile" or
 "overview"), also gather identifying fields — operator, status, county/basin/
