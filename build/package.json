@@ -2,9 +2,14 @@
   "name": "petry-chart-bundle-build",
   "private": true,
   "type": "module",
-  "description": "Dev-time build: bundles the real @aai-agency/og-components chart + its compiled Tailwind CSS into the self-contained artifact the petry plugin ships. Resolves the library from the local aai-og-components workspace (0.4.1 is not yet on npm). Run `pnpm i && pnpm build`; the output (skills/get-well-production/assets/preview.html) is committed so users never build.",
+  "description": "Dev-time build: bundles the real @aai-agency/og-components Chart (kind=line) + its compiled Tailwind CSS into the self-contained artifact the petry plugin ships. Resolves the library from npm via the focused /chart export (so deck.gl/mapbox stay out). Run `pnpm i && pnpm build`; the output (skills/get-well-production/assets/preview.html) is committed so users never build.",
   "scripts": {
     "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@aai-agency/og-components": "0.6.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.0.0",

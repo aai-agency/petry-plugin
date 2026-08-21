@@ -1,9 +1,10 @@
 // Entry bundled into the artifact. Exposes window.OGChart.render(el, chartData),
-// which mounts the REAL @aai-agency/og-components DeclineCurve — the oil decline
-// with the well's captured vault events as native on-chart annotations.
+// which mounts the REAL @aai-agency/og-components Chart (kind="line") — the oil
+// production series with an opt-in decline-forecast layer, plus the well's
+// captured vault events as native on-chart annotation bands.
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { DeclineCurve } from "@aai-agency/og-components";
+import { Chart } from "@aai-agency/og-components/chart";
 
 // Vault observation type -> annotation color (matches the card's Activity panel).
 const ANNO_COLOR = {
@@ -13,17 +14,19 @@ const ANNO_COLOR = {
 // -> a valid AnnotationType (drives grouping; color is overridden above).
 const ANNO_TYPE = { note: "note", measurement: "note" };
 
-const monthsBetween = (startYM, ym) => {
-  const [sy, sm] = String(startYM).slice(0, 7).split("-").map(Number);
-  const [y, m] = String(ym).slice(0, 7).split("-").map(Number);
+const ym = (v) => String(v || "").slice(0, 7);
+
+const monthsBetween = (startYM, val) => {
+  const [sy, sm] = ym(startYM).split("-").map(Number);
+  const [y, m] = ym(val).split("-").map(Number);
   if ([sy, sm, y, m].some((n) => Number.isNaN(n))) return NaN;
   return (y - sy) * 12 + (m - sm);
 };
 
-// Captured activity -> DeclineCurve annotations (time axis is months from startDate).
+// Captured activity -> Chart annotations (time axis is months from startDate).
 const toAnnotations = (activity, months) => {
   if (!Array.isArray(activity) || !months.length) return [];
-  const start = String(months[0]).slice(0, 7);
+  const start = ym(months[0]);
   const out = [];
   let i = 0;
   for (const a of activity) {
@@ -42,25 +45,51 @@ const toAnnotations = (activity, months) => {
   return out;
 };
 
+// number[] aligned to months[] -> a TimeSeries { data: {date, value}[] }.
+const toSeries = (id, associatedType, unit, values, months, axis) => ({
+  id,
+  associatedType,
+  unit,
+  frequency: "monthly",
+  axis,
+  data: values
+    .map((v, i) => ({ date: (ym(months[i]) || "2024-01") + "-01", value: Number(v) }))
+    .filter((d) => !Number.isNaN(d.value)),
+});
+
 const render = (el, cd) => {
   const s = (cd && cd.series) || {};
   const months = s.months || [];
   const oil = (s.oil || []).map(Number).filter((v) => !Number.isNaN(v));
   if (!oil.length) { el.textContent = "No production series to plot."; return; }
-  const time = oil.map((_, i) => i);
-  const startDate = String(months[0] || "2024-01").slice(0, 7) + "-01";
+
+  const unit = cd.unit || "bbl/d";
+  const startDate = (ym(months[0]) || "2024-01") + "-01";
+
+  const series = [toSeries("oil", "oil", unit, oil, months, "left")];
+  const gas = (s.gas || []).map(Number).filter((v) => !Number.isNaN(v));
+  if (gas.length) series.push(toSeries("gas", "gas", "mcf/d", gas, months, "right"));
+  const water = (s.water || []).map(Number).filter((v) => !Number.isNaN(v));
+  if (water.length) series.push(toSeries("water", "water", unit, water, months, "left"));
+
   createRoot(el).render(
-    React.createElement(DeclineCurve, {
-      production: oil,
-      time,
-      startDate,
-      timeUnit: "month",
-      unitsPerYear: 12,
-      unit: cd.unit || "bbl/d",
+    React.createElement(Chart, {
+      kind: "line",
+      series,
       height: 360,
-      showVariance: false,               // cleaner profile card
-      forecastHorizon: oil.length + 6,   // ~6 months past the actuals, so the data isn't compressed
-      initialAnnotations: toAnnotations(cd.activity, months),
+      showForecast: true,
+      // Opt-in decline forecast on the oil series (read-only in the artifact
+      // preview; the interactive editor is Path B in the skill).
+      forecast: {
+        seriesId: "oil",
+        editable: false,
+        horizon: oil.length + 6, // ~6 months past the actuals, so data isn't compressed
+        unitsPerYear: 12,
+        startDate,
+        timeUnit: "month",
+      },
+      annotations: toAnnotations(cd.activity, months),
+      rightAxisFluids: gas.length ? ["gas"] : undefined,
     })
   );
 };
