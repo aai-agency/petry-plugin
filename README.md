@@ -35,7 +35,7 @@ From GitHub:
 
 ## How it works
 
-- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). It fills a self-contained HTML preview for a quick look, or scaffolds the actual React components when you want the interactive versions. Before it draws, it reads the well's vault and adds its captured events as numbered markers on the chart plus an activity list on the card.
+- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, `Chart kind="line"` with an opt-in decline-forecast layer, AssetDetailCard). It fills a self-contained HTML preview for a quick look, or scaffolds the actual React components when you want the interactive versions. Before it draws, it reads the well's vault and adds its captured events as numbered markers on the chart plus an activity list on the card.
 - **Vault** — `capture` appends one observation per fact to `.petry/vault/<well>.md`. The vault is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`. Plain Markdown you can read, commit, or keep private.
 
 ## Layout
