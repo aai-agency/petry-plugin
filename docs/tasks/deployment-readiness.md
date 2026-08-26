@@ -15,7 +15,7 @@ Prepare the capture → vault → well-profile feature branch for release as
 - [x] Remove stale naming and documentation, and bump release metadata.
 - [x] Add regression tests for the vault, renderer, and chart-data normalization.
 - [x] Validate the plugin manifest, build, generated artifact, and user-facing CLI.
-- [ ] Ship the work on a reviewable pull request; do not merge or deploy it.
+- [x] Ship the work on a reviewable pull request; do not merge or deploy it.
 
 ## Decisions
 
@@ -35,3 +35,4 @@ Prepare the capture → vault → well-profile feature branch for release as
 - Artifact SHA-256: `8d75e54a09f8ad13228def57d9cca9dab21addedadb244526c501d764340e8b6`.
 - Rendered fixture inspected at `1440×1100` and `390×1100`; no clipping,
   unreadable density, or missing series labels observed.
+- Pull request: https://github.com/aai-agency/petry-plugin/pull/3
