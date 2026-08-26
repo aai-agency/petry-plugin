@@ -1,0 +1,31 @@
+{
+  "well": {
+    "name": "HOWARD 4N-28HZ",
+    "operator": "Representative sample",
+    "status": "producing",
+    "basin": "Williston",
+    "county": "McKenzie",
+    "state": "ND",
+    "formation": "Bakken"
+  },
+  "note": "Representative sample data for artifact verification — not a real well record.",
+  "unit": "bbl/d",
+  "kpis": [
+    { "label": "Peak Oil", "value": 842, "unit": "bbl/d" },
+    { "label": "Latest Oil", "value": 346, "unit": "bbl/d" },
+    { "label": "Latest Gas", "value": 711, "unit": "Mcf/d" },
+    { "label": "Water", "value": 92, "unit": "bbl/d" }
+  ],
+  "series": {
+    "months": ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"],
+    "oil": [842, 801, 754, 712, 676, 641, 608, 579, 552, 526, 501, 478, 456, 435, 416, 397, 371, 346],
+    "gas": [540, 552, 571, 589, 610, 628, 647, 662, 677, 690, 702, 714, 723, 730, 735, 728, 719, 711],
+    "water": [44, 47, 51, 54, 57, 61, 64, 68, 71, 74, 77, 80, 82, 84, 86, 88, 90, 92],
+    "units": { "oil": "bbl/d", "gas": "Mcf/d", "water": "bbl/d" }
+  },
+  "activity": [
+    { "type": "event", "date": "2025-06-14", "text": "Choke reduced after separator constraint." },
+    { "type": "measurement", "date": "2025-11-03", "text": "Flowing pressure recorded at 1,240 psi." },
+    { "type": "decision", "date": "2026-03-18", "text": "Continue current lift settings through the next review." }
+  ]
+}

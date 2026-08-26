@@ -1,23 +1,25 @@
 ---
-name: capture-insight
+name: capture
 description: >
   Capture an asserted oil & gas field insight about a well/asset into the local
-  Petry knowledge log. Activate automatically whenever the user states a fact,
+  Petry knowledge vault. Activate automatically whenever the user states a fact,
   measurement, event, or decision about a specific well, lease, field, or
   operator — e.g. "the ESP on HOWARD 4N failed", "COASTAL 14 tested 280 bbl/d",
   "we're deferring the recompletion on WELLS RANCH 12-3" — and when the user
   explicitly says "capture that", "log this", "note this on <well>", or invokes
-  /capture-insight. Only fires for ASSERTED facts about a named asset, never for
+  /capture. Only fires for ASSERTED facts about a named asset, never for
   questions or hypotheticals.
 ---
 
-# Capture insight → local knowledge log
+# Capture → local knowledge vault
 
-Petry keeps a plain-Markdown log of what your team learns about its assets, on
+Petry keeps a plain-Markdown vault of what your team learns about its assets, on
 disk, no backend. This skill turns an asserted fact in the conversation into one
-stored **observation**. The stored schema is a 1:1 subset of a Petry
-context-graph observation, so the log upgrades cleanly to the knowledge-base MCP
-later (see the plugin's `UPGRADE.md`).
+stored **observation**. Everything captured here surfaces later on the well's
+production profile — `/get-well-production` reads the same vault and marks events
+on the chart. The stored schema is a 1:1 subset of a Petry context-graph
+observation, so the vault upgrades cleanly to the knowledge-base MCP later (see
+the plugin's `UPGRADE.md`).
 
 ## When to capture (and when not to)
 
@@ -78,16 +80,19 @@ the conflict and capture the fix as a `correction`.
 
 ## Where it's stored
 
-One Markdown file per asset under `.petry/insights/` in the current project (or
-`$PETRY_INSIGHTS_DIR`). The files are human-readable and safe to commit or keep
-private. Capture is automatic — this skill fires as you assert facts, so you
-don't have to run a command — and the store is idempotent, so re-capturing the
-same fact is a no-op.
+One collision-safe Markdown file per asset under `.petry/vault/` in the current
+project (or `$PETRY_VAULT_DIR`). Vaults created by Petry `0.1.x` under
+`.petry/insights/` remain readable. The files are human-readable and safe to
+commit or keep private. Capture is automatic — this skill fires as you assert
+facts, so you don't have to run a command — and the vault is idempotent, so
+re-capturing the same fact is a no-op. Ask for the well's profile
+(`/get-well-production`) and dated events show up as bands on its production
+chart.
 
 ## Upgrading to a real knowledge base
 
-The local log is great for one person on one machine. When the team needs
-temporal history, hybrid search, per-asset AI summaries, and access control, the
-same observations replay into the Petry context-graph MCP — every observation
+The local vault is great for one person on one machine. When the team needs
+temporal history, hybrid search, per-asset AI summaries, and multiplayer access,
+the same observations replay into the Petry context-graph MCP — every observation
 carries the type, text, valid_at, and source it needs, so nothing is lost in the
 move. See the plugin's `UPGRADE.md`.

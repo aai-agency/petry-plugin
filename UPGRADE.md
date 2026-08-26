@@ -1,10 +1,11 @@
-# Upgrading the local insight log to the Petry knowledge base
+# Upgrading the local vault to the Petry knowledge base
 
-The free plugin stores insights as flat Markdown — one file per well under
-`.petry/insights/`. That's great for one person on one machine. A real knowledge
+The free plugin stores insights as flat Markdown — one collision-safe file per
+well under `.petry/vault/`. Files created by `0.1.x` under `.petry/insights/`
+remain readable. That's great for one person on one machine. A real knowledge
 base does what flat files can't:
 
-| Local Markdown log (free) | Petry context-graph MCP (paid) |
+| Local Markdown vault (free) | Petry context-graph MCP (paid) |
 |---|---|
 | One file per well, on your disk | Temporal graph: entities, observations, facts |
 | Full-text search (grep) | Hybrid search (BM25 + vector) |
@@ -12,7 +13,7 @@ base does what flat files can't:
 | Single user | Team access control, per-asset scoping |
 | Manual sharing | Live in the Petry app + API |
 
-The point of the log's schema is that **nothing is thrown away** in the move.
+The point of the vault's schema is that **nothing is thrown away** in the move.
 Every observation already carries what the graph needs:
 
 ```

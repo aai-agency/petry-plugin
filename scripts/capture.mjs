@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// petry — local Markdown knowledge log for oil & gas field insights.
+// petry — local Markdown knowledge vault for oil & gas field insights.
 //
 // Zero dependencies. Node 18+. Cross-platform. Every observation is stored in a
-// schema that maps 1:1 to a Petry context-graph observation, so the log can be
+// schema that maps 1:1 to a Petry context-graph observation, so the vault can be
 // replayed into the paid MCP later (see ../UPGRADE.md).
 //
 // Commands:
@@ -12,7 +12,7 @@
 //   finalize  [--session <id>]             # dedupe + summary (Phase 2 session hook calls this). Never fails.
 //   where                                  # print the resolved store directory
 //
-// Store location: $PETRY_INSIGHTS_DIR, else <cwd>/.petry/insights
+// Vault location: $PETRY_VAULT_DIR (or legacy $PETRY_INSIGHTS_DIR), else <cwd>/.petry/vault
 
 import fs from "node:fs";
 import path from "node:path";
@@ -28,9 +28,14 @@ const OBSERVATION_TYPES = [
   "preference",
 ];
 
-const storeDir = () =>
-  process.env.PETRY_INSIGHTS_DIR
-    ? path.resolve(process.env.PETRY_INSIGHTS_DIR)
+const storeDir = () => {
+  const env = process.env.PETRY_VAULT_DIR || process.env.PETRY_INSIGHTS_DIR;
+  return env ? path.resolve(env) : path.resolve(process.cwd(), ".petry", "vault");
+};
+
+const legacyStoreDir = () =>
+  process.env.PETRY_VAULT_DIR || process.env.PETRY_INSIGHTS_DIR
+    ? null
     : path.resolve(process.cwd(), ".petry", "insights");
 
 const slugify = (s) =>
@@ -52,10 +57,33 @@ const obsHash = (type, text, validAt) =>
     .digest("hex")
     .slice(0, 12);
 
+const assetRefHash = (ref) =>
+  crypto.createHash("sha256").update(String(ref)).digest("hex").slice(0, 10);
+
+const isIsoDate = (value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+};
+
 // Keep user text on one visible line and out of the HTML comment machinery.
 const cleanText = (s) => s.replace(/\s+/g, " ").replace(/<!--|-->/g, "—").trim();
 
-const attr = (v) => String(v ?? "").replace(/"/g, "'").replace(/[\r\n]+/g, " ").trim();
+const attr = (v) =>
+  String(v ?? "")
+    .replace(/[\r\n]+/g, " ")
+    .trim()
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const decodeAttr = (v) =>
+  String(v ?? "")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 
 const parseArgs = (argv) => {
   const out = { _: [] };
@@ -83,8 +111,6 @@ const ensureStore = () => {
   return dir;
 };
 
-const assetFilePath = (ref) => path.join(ensureStore(), `${slugify(ref)}.md`);
-
 const readFileSafe = (p) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "");
 
 // One list-item line for an observation.
@@ -105,7 +131,7 @@ const parseObsFromFile = (content, ref, slug) => {
   while ((m = lineRe.exec(content)) !== null) {
     const [, type, text, metaStr] = m;
     const meta = {};
-    for (const am of metaStr.matchAll(/(\w+)="([^"]*)"/g)) meta[am[1]] = am[2];
+    for (const am of metaStr.matchAll(/(\w+)="([^"]*)"/g)) meta[am[1]] = decodeAttr(am[2]);
     obs.push({
       asset_ref: ref,
       asset_slug: slug,
@@ -122,27 +148,52 @@ const parseObsFromFile = (content, ref, slug) => {
 
 const readAssetHeader = (content, ref) => {
   const m = content.match(/<!-- petry:asset ref="([^"]*)" slug="([^"]*)" -->/);
-  if (m) return { ref: m[1], slug: m[2] };
+  if (m) return { ref: decodeAttr(m[1]), slug: decodeAttr(m[2]) };
   return { ref, slug: slugify(ref) };
 };
 
 const listAssetFiles = () => {
-  const dir = storeDir();
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => path.join(dir, f));
+  const dirs = [storeDir(), legacyStoreDir()].filter(Boolean);
+  const files = [];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    files.push(
+      ...fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith(".md"))
+        .map((f) => path.join(dir, f))
+    );
+  }
+  return [...new Set(files)];
 };
 
+const findAssetFile = (ref) => {
+  for (const fp of listAssetFiles()) {
+    const content = readFileSafe(fp);
+    if (!content) continue;
+    if (readAssetHeader(content, path.basename(fp, ".md")).ref === ref) return fp;
+  }
+  return null;
+};
+
+const assetFilePath = (ref) =>
+  findAssetFile(ref) ||
+  path.join(ensureStore(), `${slugify(ref)}--${assetRefHash(ref)}.md`);
+
 const allObservations = (filterRef) => {
-  const files = filterRef ? [assetFilePath(filterRef)] : listAssetFiles();
   const result = [];
-  for (const fp of files) {
+  const seen = new Set();
+  for (const fp of listAssetFiles()) {
     const content = readFileSafe(fp);
     if (!content) continue;
     const header = readAssetHeader(content, path.basename(fp, ".md"));
-    result.push(...parseObsFromFile(content, header.ref, header.slug));
+    if (filterRef && header.ref !== filterRef) continue;
+    for (const observation of parseObsFromFile(content, header.ref, header.slug)) {
+      const key = `${observation.asset_ref}\0${observation.hash}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(observation);
+    }
   }
   return result;
 };
@@ -167,6 +218,10 @@ const cmdAdd = (args) => {
   }
   const validAt = args["valid-at"] && args["valid-at"] !== true ? args["valid-at"] : "";
   const source = args.source && args.source !== true ? args.source : "";
+  if (validAt && !isIsoDate(validAt)) {
+    console.error(`petry add: invalid --valid-at "${validAt}". Use a real YYYY-MM-DD date.`);
+    process.exit(2);
+  }
   const hash = obsHash(type, text, validAt);
 
   const fp = assetFilePath(ref);
@@ -177,7 +232,7 @@ const cmdAdd = (args) => {
     content = `# ${ref}\n\n<!-- petry:asset ref="${attr(ref)}" slug="${slug}" -->\n\n## Observations\n\n`;
   }
   // Idempotent: same (type + normalized text + valid_at) is a no-op.
-  if (content.includes(`hash="${hash}"`)) {
+  if (allObservations(ref).some((observation) => observation.hash === hash)) {
     console.log(
       JSON.stringify({ status: "duplicate", asset: ref, slug, type, hash, file: fp })
     );
