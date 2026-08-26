@@ -1,7 +1,8 @@
 # Upgrading the local vault to the Petry knowledge base
 
-The free plugin stores insights as flat Markdown — one file per well under
-`.petry/vault/`. That's great for one person on one machine. A real knowledge
+The free plugin stores insights as flat Markdown — one collision-safe file per
+well under `.petry/vault/`. Files created by `0.1.x` under `.petry/insights/`
+remain readable. That's great for one person on one machine. A real knowledge
 base does what flat files can't:
 
 | Local Markdown vault (free) | Petry context-graph MCP (paid) |

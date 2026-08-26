@@ -4,8 +4,8 @@ Two verb skills every oil & gas team wants from an AI agent, free and with no ba
 
 | Skill | What it does |
 |---|---|
-| **`/get-well-production <well>`** | Pulls a well's production data **from whatever you're connected to** (your files, a database, an MCP) and renders it as a self-contained production chart — or a fuller profile card with metadata + KPIs. |
-| **`/capture <well>: <what you saw>`** | Saves one field insight to your local Markdown knowledge vault — and it lights up on that well's production profile (events become markers on the chart). Schema upgrades cleanly to a real knowledge base. |
+| **`/get-well-production <well>`** | Pulls a well's production data **from whatever you're connected to** (your files, a database, an MCP) and renders it as a self-contained oil/gas/water production chart — or a fuller profile card with metadata + KPIs. |
+| **`/capture <well>: <what you saw>`** | Saves one field insight to your local Markdown knowledge vault — and it lights up on that well's production profile as a dated annotation band. Schema upgrades cleanly to a real knowledge base. |
 
 > Skills are verb-named, so you invoke them bare: `/get-well-production`, `/capture`. (Claude Code also lists a namespaced form, `/petry:get-well-production`, to disambiguate if another plugin ever ships the same verb — but you don't type it.)
 
@@ -35,8 +35,8 @@ From GitHub:
 
 ## How it works
 
-- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). It fills a self-contained HTML preview for a quick look, or scaffolds the actual React components when you want the interactive versions. Before it draws, it reads the well's vault and adds its captured events as numbered markers on the chart plus an activity list on the card.
-- **Vault** — `capture` appends one observation per fact to `.petry/vault/<well>.md`. The vault is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`. Plain Markdown you can read, commit, or keep private.
+- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). Its offline profile uses the real `DeclineCurve` for oil, plots gas and water as contextual series, and adds dated vault activity as annotation bands plus an activity list.
+- **Vault** — `capture` appends one observation per fact to a collision-safe Markdown file under `.petry/vault/`. The vault is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`. Existing `.petry/insights/` files from `0.1.x` remain readable.
 
 ## Layout
 
@@ -46,6 +46,7 @@ From GitHub:
 skills/get-well-production/        data-sourcing + chart skill + self-contained HTML preview
 skills/capture/                    insight-capture skill (writes the vault)
 scripts/capture.mjs                the local knowledge vault store (zero-dep Node)
+scripts/render-preview.mjs         safely fills the offline profile template
 UPGRADE.md                         moving the local vault into the Petry knowledge base
 ```
 

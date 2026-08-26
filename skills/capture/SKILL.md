@@ -80,12 +80,14 @@ the conflict and capture the fix as a `correction`.
 
 ## Where it's stored
 
-One Markdown file per asset under `.petry/vault/` in the current project (or
-`$PETRY_VAULT_DIR`). The files are human-readable and safe to commit or keep
-private. Capture is automatic — this skill fires as you assert facts, so you
-don't have to run a command — and the vault is idempotent, so re-capturing the
-same fact is a no-op. Ask for the well's profile (`/get-well-production`) and the
-events you captured show up as markers on its production chart.
+One collision-safe Markdown file per asset under `.petry/vault/` in the current
+project (or `$PETRY_VAULT_DIR`). Vaults created by Petry `0.1.x` under
+`.petry/insights/` remain readable. The files are human-readable and safe to
+commit or keep private. Capture is automatic — this skill fires as you assert
+facts, so you don't have to run a command — and the vault is idempotent, so
+re-capturing the same fact is a no-op. Ask for the well's profile
+(`/get-well-production`) and dated events show up as bands on its production
+chart.
 
 ## Upgrading to a real knowledge base
 

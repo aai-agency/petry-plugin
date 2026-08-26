@@ -4,7 +4,6 @@
 # deps / build (plugins ship source; none of this belongs in the repo)
 node_modules/
 dist/
-build/.og-barrel.mjs
 build/.tw-input.css
 build/.tw-out.css
 

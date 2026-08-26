@@ -1,0 +1,7 @@
+packages:
+  - build
+
+allowBuilds:
+  esbuild: true
+  '@parcel/watcher': false
+  '@vaadin/vaadin-usage-statistics': false
