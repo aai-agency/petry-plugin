@@ -4,10 +4,10 @@ import test from "node:test";
 
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 
-test("release metadata is aligned at 0.2.0", () => {
+test("release metadata is aligned at 0.2.1", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
-  assert.equal(root.version, "0.2.0");
+  assert.equal(root.version, "0.2.1");
   assert.equal(plugin.version, root.version);
 });
 

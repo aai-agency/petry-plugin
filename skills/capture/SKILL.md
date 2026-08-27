@@ -8,7 +8,9 @@ description: >
   "we're deferring the recompletion on WELLS RANCH 12-3" — and when the user
   explicitly says "capture that", "log this", "note this on <well>", or invokes
   /capture. Only fires for ASSERTED facts about a named asset, never for
-  questions or hypotheticals.
+  questions or hypotheticals. When it fires automatically it PROPOSES the
+  capture and writes only after the user approves; an explicit "capture that" /
+  "log this" / /capture is that approval.
 ---
 
 # Capture → local knowledge vault
@@ -38,9 +40,28 @@ Do **not** capture:
 
 If a turn has no assertable asset fact, do nothing — say nothing about capturing.
 
+## Ask before writing
+
+Never create or update anything in the vault without the user's go-ahead.
+
+- **The user explicitly asked** — "capture that", "log this", "note this on
+  <well>", or `/capture`. That request IS the permission; capture immediately,
+  don't ask again.
+- **The skill fired automatically** off an asserted fact. Propose first, in one
+  line: the well, the observation type, and the exact sentence you would store —
+  e.g. `Capture HOWARD 4N-28HZ · measurement · "ESP swapped; rate back to
+  280 bbl/d"?` Run the capture script only after the user says yes. If they
+  don't respond or decline, drop it silently — never capture "while you wait".
+- **Updating existing context** (a correction, or amending an earlier
+  observation): show what's stored now next to what would replace it, and
+  confirm before writing — even when the user explicitly asserted the new fact.
+
+Batch the ask: several facts in one turn get one proposal listing all of them,
+and one yes covers the batch. The user can approve a subset.
+
 ## How to capture
 
-For each asserted fact, run the capture script once. It is idempotent — the same
+For each approved fact, run the capture script once. It is idempotent — the same
 fact captured twice is a no-op, so you never create duplicates.
 
 ```bash
@@ -76,16 +97,18 @@ each and give a one-line summary of how many were logged to which wells.
 
 If a new fact contradicts something you can see already logged (check with
 `node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" list --asset "<well>"`), flag
-the conflict and capture the fix as a `correction`.
+the conflict and — after the user confirms (see "Ask before writing") — capture
+the fix as a `correction`.
 
 ## Where it's stored
 
 One collision-safe Markdown file per asset under `.petry/vault/` in the current
 project (or `$PETRY_VAULT_DIR`). Vaults created by Petry `0.1.x` under
 `.petry/insights/` remain readable. The files are human-readable and safe to
-commit or keep private. Capture is automatic — this skill fires as you assert
-facts, so you don't have to run a command — and the vault is idempotent, so
-re-capturing the same fact is a no-op. Ask for the well's profile
+commit or keep private. The skill fires as you assert facts, so you never have
+to run a command — but nothing is written until you approve the proposed
+capture — and the vault is idempotent, so re-capturing the same fact is a
+no-op. Ask for the well's profile
 (`/get-well-production`) and dated events show up as bands on its production
 chart.
 
