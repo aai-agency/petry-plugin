@@ -13,17 +13,19 @@ Two verb skills every oil & gas team wants from an AI agent, free and with no ba
 
 ## Install
 
-From a local checkout:
-
-```
-/plugin marketplace add <path-to-your-checkout>/petry-plugin
-/plugin install petry@aai-agency
-```
-
-From GitHub:
+In any Claude Code session:
 
 ```
 /plugin marketplace add aai-agency/petry-plugin
+/plugin install petry@aai-agency
+```
+
+(Or the shell form: `claude plugin marketplace add aai-agency/petry-plugin && claude plugin install petry@aai-agency`.)
+
+For development, from a local checkout:
+
+```
+/plugin marketplace add <path-to-your-checkout>/petry-plugin
 /plugin install petry@aai-agency
 ```
 
