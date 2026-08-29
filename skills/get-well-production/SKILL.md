@@ -144,6 +144,8 @@ Include:
   `EventTimeline` in all component-capable artifacts.
 - No sample, mock, demo, or synthetic-data banner unless the user explicitly
   asks for that label. Keep source provenance neutral and factual.
+- Render every petry product or brand label exactly as lowercase `petry`; never
+  title-case or uppercase it in headings, badges, metadata, or provenance.
 
 Use accessible colors, text alternatives/labels, and responsive layout. Escape
 user-provided text before placing it in HTML or executable contexts. Present the

@@ -64,6 +64,7 @@ test("production defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /Generate custom UI only when/i);
   assert.match(skill, /does not export a\s+production table/i);
   assert.match(skill, /No sample, mock, demo, or synthetic-data banner unless the user explicitly/i);
+  assert.match(skill, /every petry product or brand label exactly as lowercase `petry`/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });
 
