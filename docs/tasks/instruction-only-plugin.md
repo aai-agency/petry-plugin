@@ -16,8 +16,8 @@ renderer.
 - [x] Remove runtime programs, bundled preview, and artifact build workspace.
 - [x] Remove obsolete tests and add instruction-package invariants.
 - [x] Update release metadata and documentation.
-- [ ] Validate the marketplace package on Linux and Windows.
-- [ ] Open a pull request.
+- [x] Validate the marketplace package on Linux and Windows.
+- [x] Open pull request #7.
 - [ ] Install from the marketplace and repeat the clean Cowork smoke test.
 
 ## Decisions
@@ -39,3 +39,6 @@ renderer.
 - The attached vault was available only on the device runtime, where the skill
   directory and variable were absent.
 - Cowork stopped without writing the requested observation or modifying SQLite.
+- `pnpm run check` passed all four instruction-package invariants locally.
+- `claude plugin validate .` passed for the marketplace manifest.
+- PR #7 passed its Ubuntu and Windows validation jobs.
