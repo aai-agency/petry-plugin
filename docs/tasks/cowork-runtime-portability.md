@@ -15,8 +15,9 @@ copying plugin files between cloud and device environments.
 - [x] Preserve root-level script entry points for Claude Code and existing docs.
 - [x] Add Linux and Windows CI coverage for the portable entry points.
 - [x] Run the full repository check.
-- [ ] Install the updated plugin in Cowork and repeat the installed-only smoke test.
-- [ ] Commit, push, and open a pull request.
+- [ ] Install the updated plugin in Cowork and repeat the installed-only smoke
+  test (deferred until PR #6 reaches the marketplace default branch).
+- [x] Commit, push, and open pull request #6.
 
 ## Decisions
 
