@@ -15,6 +15,8 @@ const require = createRequire(import.meta.url);
 const ogStylesPath = require.resolve("@aai-agency/og-components/styles.css");
 const ogPackageRoot = resolve(dirname(ogStylesPath), "..");
 const ogDist = join(ogPackageRoot, "dist");
+const tailwindPackage = require.resolve("@tailwindcss/cli/package.json");
+const tailwindCli = join(dirname(tailwindPackage), "dist", "index.mjs");
 if (!existsSync(ogDist)) {
   console.error(`og-components distribution not found at ${ogDist}. Run pnpm install.`);
   process.exit(1);
@@ -45,7 +47,7 @@ writeFileSync(
     readFileSync(ogStylesPath, "utf8")
 );
 const twOut = R(".tw-out.css");
-execFileSync(R("node_modules/.bin/tailwindcss"), ["-i", twInput, "-o", twOut, "--minify"], {
+execFileSync(process.execPath, [tailwindCli, "-i", twInput, "-o", twOut, "--minify"], {
   stdio: "inherit",
   cwd: __dirname,
 });
@@ -78,7 +80,8 @@ const out = R("../skills/get-well-production/assets/preview.html");
 const check = process.argv.includes("--check");
 if (check) {
   const existing = existsSync(out) ? readFileSync(out, "utf8") : "";
-  if (existing !== html) {
+  const normalizeEol = (value) => value.replace(/\r\n/g, "\n");
+  if (normalizeEol(existing) !== normalizeEol(html)) {
     console.error("generated artifact is stale; run pnpm build in build/");
     process.exit(1);
   }

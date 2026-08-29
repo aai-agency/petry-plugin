@@ -45,10 +45,10 @@ For development, from a local checkout:
 ```
 .claude-plugin/plugin.json        plugin manifest
 .claude-plugin/marketplace.json   lets this repo act as a marketplace ("aai-agency")
-skills/get-well-production/        data-sourcing + chart skill + self-contained HTML preview
-skills/capture/                    insight-capture skill (writes the vault)
-scripts/capture.mjs                the local knowledge vault store (zero-dep Node)
-scripts/render-preview.mjs         safely fills the offline profile template
+skills/get-well-production/        chart skill + preview + device-portable renderer
+skills/capture/                    capture skill + device-portable vault store
+scripts/capture.mjs                compatibility launcher for the capture helper
+scripts/render-preview.mjs         compatibility launcher for the renderer
 UPGRADE.md                         moving the local vault into the Petry knowledge base
 ```
 

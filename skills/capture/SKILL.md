@@ -65,7 +65,7 @@ For each approved fact, run the capture script once. It is idempotent — the sa
 fact captured twice is a no-op, so you never create duplicates.
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" add \
+node "${CLAUDE_SKILL_DIR}/scripts/capture.mjs" add \
   --asset "HOWARD 4N-28HZ" \
   --type measurement \
   --text "ESP swapped; rate back to 280 bbl/d" \
@@ -84,9 +84,10 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" add \
 - `--source` — leave as `session` unless the user names a source (a report, a
   gauge, a person).
 
-`${CLAUDE_PLUGIN_ROOT}` points at this plugin's directory. If it isn't set in
-your shell, the script is at `scripts/capture.mjs` inside this plugin (installed
-under `~/.claude/plugins/`); locate it and call it with the same arguments.
+`${CLAUDE_SKILL_DIR}` points at this skill's directory on the active execution
+surface. Always use it instead of locating or copying plugin files manually.
+This keeps the command on the same Cowork device runtime as the user's writable
+project folder and also works in Claude Code.
 
 ## After capturing
 
@@ -96,7 +97,7 @@ to 280 bbl/d".` Don't over-narrate. If several facts were in one turn, capture
 each and give a one-line summary of how many were logged to which wells.
 
 If a new fact contradicts something you can see already logged (check with
-`node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" list --asset "<well>"`), flag
+`node "${CLAUDE_SKILL_DIR}/scripts/capture.mjs" list --asset "<well>"`), flag
 the conflict and — after the user confirms (see "Ask before writing") — capture
 the fix as a `correction`.
 

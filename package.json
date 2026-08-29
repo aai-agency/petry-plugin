@@ -1,11 +1,11 @@
 {
   "name": "petry-plugin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "scripts": {
     "test": "node --test",
-    "check": "node --check scripts/capture.mjs && node --check scripts/render-preview.mjs && node --test && pnpm --dir build check"
+    "check": "node --check scripts/capture.mjs && node --check scripts/render-preview.mjs && node --check skills/capture/scripts/capture.mjs && node --check skills/get-well-production/scripts/render-preview.mjs && node --test && pnpm --dir build check"
   }
 }
