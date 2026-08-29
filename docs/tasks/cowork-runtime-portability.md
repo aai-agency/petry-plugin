@@ -42,3 +42,5 @@ copying plugin files between cloud and device environments.
   build now invokes Tailwind's JavaScript entry point through Node.
 - The freshness check normalizes checkout line endings so Windows CRLF files
   compare correctly with the generated LF bundle.
+- PR #6 CI passed on both `ubuntu-latest` and `windows-latest` after exercising
+  all 17 tests and the generated-artifact freshness check.
