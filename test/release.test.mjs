@@ -5,10 +5,10 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.3.0", () => {
+test("release metadata is aligned at 0.3.1", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
-  assert.equal(root.version, "0.3.0");
+  assert.equal(root.version, "0.3.1");
   assert.equal(plugin.version, root.version);
 });
 
@@ -51,5 +51,7 @@ test("production defines dynamic native artifacts without a renderer", () => {
   assert.match(skill, /"series"/);
   assert.match(skill, /"activity"/);
   assert.match(skill, /"provenance"/);
+  assert.match(skill, /Never apply a\s+global `svg \{ width: 100% \}` rule/i);
+  assert.match(skill, /scrollWidth.*clientWidth/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });

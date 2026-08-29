@@ -18,7 +18,7 @@ renderer.
 - [x] Update release metadata and documentation.
 - [x] Validate the marketplace package on Linux and Windows.
 - [x] Open pull request #7.
-- [ ] Install from the marketplace and repeat the clean Cowork smoke test.
+- [x] Install from the marketplace and repeat the clean Cowork smoke test.
 
 ## Decisions
 
@@ -29,7 +29,8 @@ renderer.
   in-memory data model.
 - React implementation remains an explicit, separate path using
   `@aai-agency/og-components`.
-- Version `0.3.0` marks the removal of the executable runtime contract.
+- Version `0.3.0` marks the removal of the executable runtime contract;
+  `0.3.1` adds the responsive-artifact rule discovered during live visual QA.
 
 ## Evidence
 
@@ -42,3 +43,17 @@ renderer.
 - `pnpm run check` passed all four instruction-package invariants locally.
 - `claude plugin validate .` passed for the marketplace manifest.
 - PR #7 passed its Ubuntu and Windows validation jobs.
+- Cowork marketplace sync exposed v0.3.0 as two skills that "Only adds
+  instructions for Claude"; installation completed without attaching source.
+- A clean task attached only `petry-mock-cloud`, invoked both installed skills,
+  appended one observation through connected-folder editing, and treated the
+  identical second capture as a no-op (4 observations and identical SHA-256
+  before/after).
+- The production skill read 730 mock SQLite rows through a read-only immutable
+  connection, published a native inline oil/gas/water artifact with all four
+  asset-matched observations, and left the database hash unchanged at
+  `c5cdb7183fd664c78f38b7bfb61b73bb794b5ca6170d60c8e06a519c79c92de4`.
+- Visual QA caught a global SVG rule stretching the synthetic-data warning
+  icon. The generated artifact was corrected and verified at 460, 560, and 720
+  px with an 18×18 icon, readable banner, and no horizontal overflow. The skill
+  now makes this responsive CSS constraint explicit.
