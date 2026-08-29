@@ -38,3 +38,5 @@ copying plugin files between cloud and device environments.
 - `claude plugin validate .` passed for the marketplace manifest.
 - GitHub Actions now validates Ubuntu and Windows runners, and the portable
   entry-point assertions use Node path semantics instead of Unix separators.
+- The Windows runner exposed a Unix-only build-tool launcher; the artifact
+  build now invokes Tailwind's JavaScript entry point through Node.
