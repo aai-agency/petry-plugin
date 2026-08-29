@@ -1,4 +1,4 @@
-# Instruction-only Petry plugin
+# Instruction-only petry plugin
 
 ## Goal
 
@@ -19,6 +19,10 @@ renderer.
 - [x] Validate the marketplace package on Linux and Windows.
 - [x] Open pull request #7.
 - [x] Install from the marketplace and repeat the clean Cowork smoke test.
+- [x] Make the published oil-and-gas component library the primary artifact UI.
+- [x] Require click-through verification of the library event detail dialog.
+- [x] Limit generated UI to capabilities the library does not provide.
+- [x] Normalize the petry brand to lowercase across shipped text and metadata.
 
 ## Decisions
 
@@ -27,10 +31,15 @@ renderer.
 - The vault remains human-readable Markdown and continues to read legacy rows.
 - One-off production views are native Cowork artifacts generated from a defined
   in-memory data model.
-- React implementation remains an explicit, separate path using
-  `@aai-agency/og-components`.
+- Oil-and-gas interfaces use the latest compatible
+  `@aai-agency/og-components` first whenever React bundling is available.
+- Custom artifact UI is limited to library gaps and must not be represented as
+  a library component.
 - Version `0.3.0` marks the removal of the executable runtime contract;
   `0.3.1` adds the responsive-artifact rule discovered during live visual QA.
+- Version `0.4.0` makes component-first artifact generation the default, adds
+  required event-dialog interaction verification, removes automatic synthetic
+  data banners, and normalizes the petry brand to lowercase.
 
 ## Evidence
 
@@ -57,3 +66,13 @@ renderer.
   icon. The generated artifact was corrected and verified at 460, 560, and 720
   px with an 18×18 icon, readable banner, and no horizontal overflow. The skill
   now makes this responsive CSS constraint explicit.
+- Live v0.3.1 acceptance testing proved capture, deduplication, read-only SQLite
+  access, and native artifacts, but also proved the generated chart, event list,
+  and table were handcrafted rather than package components.
+- The published `@aai-agency/og-components@0.7.0` declarations expose `Chart`,
+  `ChartGroup`, `EventTimeline`, `EventDetailDialog`, and `EventActivityLog`.
+  `EventTimeline` opens its accessible detail dialog on row or marker selection.
+  The package has no production-table export, so tables remain an explicit
+  custom fallback.
+- `pnpm run check` passes five release invariants for v0.4.0; both skills pass
+  `quick_validate.py`; and `claude plugin validate .` passes.

@@ -5,14 +5,14 @@ description: >
   available in the current session and present it as a production chart, decline
   curve, profile, or lease map. Activate for requests such as "get production
   for HOWARD 4N", "show a decline curve", "well profile", or "map my wells",
-  and for /get-well-production. Petry supplies the workflow and data shape, not
+  and for /get-well-production. petry supplies the workflow and data shape, not
   the production data.
 ---
 
-# Get well production → native artifact
+# get well production → component-first artifact
 
-Petry is an instruction-only skill. Retrieve the user's data dynamically and
-build the result with Claude's native artifact capabilities. Do not look for,
+petry is an instruction-only skill. Retrieve the user's data dynamically and
+build the result with Claude's artifact capabilities. Do not look for,
 execute, copy, or create plugin helper programs, bundled templates, or renderers.
 
 ## Get the data
@@ -77,7 +77,7 @@ Requirements:
 - Oil is the primary decline series when present, then gas, then water.
 - Compute KPIs only from available values and label their units.
 
-## Read Petry observations
+## Read petry observations
 
 When a connected project exists, read `.petry/vault/*.md` and legacy
 `.petry/insights/*.md`. Select only files whose decoded
@@ -95,6 +95,39 @@ rendering. Do not edit the vault while producing a chart.
 
 ## Build and show the result
 
+### Use the oil-and-gas component library first
+
+For every oil-and-gas interface, first determine whether the current artifact
+surface can build and bundle React. When it can, resolve and use the latest
+compatible release of `@aai-agency/og-components` before writing custom UI.
+Inspect the installed package README and TypeScript declarations rather than
+guessing its API. Install it in the temporary artifact workspace with the
+surface's default package manager; never add it to the connected user's project
+unless the user explicitly asked for application implementation there.
+
+Use the library component that owns the interaction:
+
+- Production history: `Chart` or `ChartGroup` from
+  `@aai-agency/og-components/chart`. Prefer `ChartGroup` for aligned oil, gas,
+  and water panels.
+- Well history: `EventTimeline` from
+  `@aai-agency/og-components/event-timeline`. Map dated petry observations to
+  `WellEvent` records and preserve their original petry type and source in
+  `meta`. Clicking a row or marker must open the component's built-in accessible
+  event detail dialog.
+- Detailed event extensions: use `EventDetailDialog`, `EventActivityLog`, or
+  `EventTimeline.renderDetail` instead of creating another modal or timeline.
+- Maps and asset details: use the package's `Map` and asset-card components only
+  when requested and when their required inputs, including a Mapbox token, are
+  available.
+
+Generate custom UI only when the installed package has no applicable component
+or the surface cannot build React. For example, if the package does not export a
+production table, a responsive semantic HTML table behind a disclosure is an
+acceptable custom addition. Do not claim a custom element came from the package.
+If React bundling is unavailable, build the native fallback and state briefly
+that the component library could not be used on the current surface.
+
 For a one-off chart, profile, or decline-curve request, create a native Cowork
 artifact directly from the normalized model and show it inline. The artifact
 should be self-contained and must not depend on a plugin file, local server,
@@ -107,9 +140,10 @@ Include:
 - A decline or forecast line only when supported by the available history;
   distinguish forecasts visually from actuals.
 - Useful KPIs derived from the data.
-- Dated Petry activity as chart annotations when practical and as a readable
-  activity list in all cases.
-- A visible sample-data notice when applicable.
+- Dated petry activity as chart annotations when practical and through
+  `EventTimeline` in all component-capable artifacts.
+- No sample, mock, demo, or synthetic-data banner unless the user explicitly
+  asks for that label. Keep source provenance neutral and factual.
 
 Use accessible colors, text alternatives/labels, and responsive layout. Escape
 user-provided text before placing it in HTML or executable contexts. Present the
@@ -123,16 +157,26 @@ charts do not clip, and `scrollWidth` does not exceed `clientWidth`.
 
 If the current surface cannot create a native artifact, create a standalone HTML
 file in the connected project using Claude's ordinary file tools and open it for
-the user. This fallback is generated for the current request; it is not a Petry
+the user. This fallback is generated for the current request; it is not a petry
 runtime dependency.
 
-## React application requests
+## Verify component behavior
 
-When the user explicitly wants implementation inside a React application, use
-the free `@aai-agency/og-components` package rather than recreating production
-components. Inspect the installed package documentation for its current API,
-keep domain fields inside `Asset.properties`, and add Mapbox only for map views.
-Do not scaffold or install packages for an ordinary one-off artifact request.
+For a component-first artifact, verify the rendered result rather than only the
+build output:
+
+- Click at least one `EventTimeline` row or marker and confirm the library event
+  detail dialog opens, can close with its button or Escape, and shows the exact
+  observation text, date, type, and source.
+- Exercise chart hover, zoom, or presentation controls that the selected chart
+  component exposes.
+- Exercise every custom fallback interaction, including table disclosures.
+- Confirm there are no console errors, unexpected network requests, or
+  horizontal overflow at split-pane and mobile widths.
+
+For implementation inside the user's React application, keep domain fields
+inside `Asset.properties`, add Mapbox only for map views, and follow the
+installed package's current peer-dependency and styling instructions.
 
 ## Related
 

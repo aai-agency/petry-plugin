@@ -1,4 +1,4 @@
-# Petry plugin deployment readiness
+# petry plugin deployment readiness
 
 > Historical v0.2.0 release record. The renderer and build decisions below
 > were superseded by the instruction-only v0.3.0 architecture.

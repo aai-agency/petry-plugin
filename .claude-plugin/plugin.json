@@ -1,7 +1,7 @@
 {
   "name": "petry",
-  "description": "Instruction-only oil & gas skills for Claude. Capture field observations in a connected local Markdown vault and dynamically turn connected production data into native inline artifacts. No runtime, backend, or keys.",
-  "version": "0.3.1",
+  "description": "Instruction-only oil & gas skills for Claude. Capture field observations in a connected local Markdown vault and dynamically turn connected production data into component-first inline artifacts. No runtime, backend, or keys.",
+  "version": "0.4.0",
   "author": {
     "name": "AAI Agency",
     "email": "husam@aai.agency",

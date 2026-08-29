@@ -1,12 +1,12 @@
 # petry — instruction-only O&G skills for Claude
 
-Petry gives Claude and Cowork two oil-and-gas workflows without shipping a
+petry gives Claude and Cowork two oil-and-gas workflows without shipping a
 runtime, renderer, server, or backend:
 
 | Skill | What Claude does |
 |---|---|
 | **`/capture`** | Writes an approved field observation into the connected project's local Markdown vault. |
-| **`/get-well-production`** | Retrieves production from the sources available in the session and creates a native inline chart or well-profile artifact. |
+| **`/get-well-production`** | Retrieves production from the sources available in the session and creates a component-first inline chart or well-profile artifact. |
 
 The loop is intentionally simple: capture writes structured Markdown under
 `.petry/vault/`; production reads the same observations and includes them in the
@@ -15,7 +15,7 @@ project.
 
 ## Install
 
-In Claude Code or Cowork, add the marketplace and install Petry:
+In Claude Code or Cowork, add the marketplace and install petry:
 
 ```text
 /plugin marketplace add aai-agency/petry-plugin
@@ -24,17 +24,17 @@ In Claude Code or Cowork, add the marketplace and install Petry:
 
 ## Requirements
 
-There are no runtime dependencies. Petry contains only two `SKILL.md` files and
+There are no runtime dependencies. petry contains only two `SKILL.md` files and
 plugin metadata. Claude uses the current surface's own connected-folder, data,
 and artifact capabilities.
 
 Production data must come from a source available to the session, such as a
-CSV, Excel workbook, JSON file, connected database, API, or MCP. Petry never
+CSV, Excel workbook, JSON file, connected database, API, or MCP. petry never
 invents production unless the user explicitly asks for sample data.
 
 ## Vault format
 
-New observations live at `<connected-project>/.petry/vault/`. Petry also reads
+New observations live at `<connected-project>/.petry/vault/`. petry also reads
 legacy `.petry/insights/` files. An asset file remains ordinary Markdown:
 
 ```md
@@ -59,13 +59,16 @@ skills/capture/SKILL.md         capture behavior and Markdown contract
 skills/get-well-production/SKILL.md
                                 production retrieval and artifact contract
 test/release.test.mjs           package-shape and instruction invariants
-UPGRADE.md                      mapping the local vault to Petry's context graph
+UPGRADE.md                      mapping the local vault to petry's context graph
 ```
 
-For React application work requested explicitly by a user, the production skill
-can use the free
+For any oil-and-gas interface that can be built as React, the production skill
+uses the latest compatible version of the free
 [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components)
-package. That is a separate application-development path, not a plugin runtime
-dependency.
+package before generating custom UI. Charts use `Chart` or `ChartGroup`; well
+history uses `EventTimeline` and its built-in detail dialog. Custom UI is only
+for gaps in the library, such as a semantic production table. The package is a
+generation-time dependency in the artifact workspace, not a petry plugin
+runtime dependency.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
