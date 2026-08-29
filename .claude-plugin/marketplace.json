@@ -10,7 +10,7 @@
     {
       "name": "petry",
       "source": "./",
-      "description": "Get a well's production data (from whatever you're connected to) as a production chart, and capture field insights to a local knowledge vault that surfaces back on the chart."
+      "description": "Instruction-only skills that turn connected well data into native artifacts and capture field observations in a local Markdown vault."
     }
   ]
 }
