@@ -115,6 +115,12 @@ Use accessible colors, text alternatives/labels, and responsive layout. Escape
 user-provided text before placing it in HTML or executable contexts. Present the
 artifact inline; save a copy into the connected project only when the user asks.
 
+Scope responsive SVG or canvas sizing rules to chart containers. Never apply a
+global `svg { width: 100% }` rule: it can stretch legends, alerts, and interface
+icons. Give non-chart icons explicit width and height with shrinking disabled.
+Verify the finished artifact at split-pane widths so banners remain readable,
+charts do not clip, and `scrollWidth` does not exceed `clientWidth`.
+
 If the current surface cannot create a native artifact, create a standalone HTML
 file in the connected project using Claude's ordinary file tools and open it for
 the user. This fallback is generated for the current request; it is not a Petry
