@@ -83,7 +83,7 @@ through `scripts/render-preview.mjs`, which safely embeds user-sourced data.
 2. **Pull this well's captured insights from the local vault** so they surface on
    the profile — this closing of the loop is the point:
    ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/capture.mjs" export --asset "<well>"
+   node "${CLAUDE_SKILL_DIR}/../capture/scripts/capture.mjs" export --asset "<well>"
    ```
    It returns `{ observations: [{ type, text, valid_at, ... }] }`. Map each to an
    `activity` entry `{ type, date: <valid_at>, text }`. If the vault has nothing
@@ -103,13 +103,17 @@ through `scripts/render-preview.mjs`, which safely embeds user-sourced data.
    never present synthesized numbers as if they were the user's real data.
 4. Render the artifact through the plugin script:
    ```bash
-   node "${CLAUDE_PLUGIN_ROOT}/scripts/render-preview.mjs" \
+   node "${CLAUDE_SKILL_DIR}/scripts/render-preview.mjs" \
      --data "/absolute/path/to/chart-data.json" \
      --out "/absolute/path/to/<well>-production.html"
    ```
    Never use manual string replacement; the renderer prevents well names,
    notes, or source data from escaping the embedded JSON/HTML context.
 5. Open or present the rendered output. It is fully offline (no CDN, no token).
+
+`${CLAUDE_SKILL_DIR}` resolves to this skill on the active execution surface.
+Use these skill-local paths directly; never locate, copy, base64-transfer, or
+mirror the plugin's scripts between Cowork's cloud and device environments.
 
 This preview is a fast look, not the real deck.gl map. For the interactive map,
 lasso selection, overlays, and the editable decline curve, go to Path B — tell
