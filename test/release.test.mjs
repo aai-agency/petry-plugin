@@ -63,6 +63,13 @@ test("production defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /built-in accessible\s+event detail dialog/i);
   assert.match(skill, /Generate custom UI only when/i);
   assert.match(skill, /does not export a\s+production table/i);
+  assert.match(skill, /area, field, pad, basin, subsystem/i);
+  assert.match(skill, /"aggregate"/);
+  assert.match(skill, /Clicking a KPI opens an accessible drill-down dialog/i);
+  assert.match(skill, /sort\s+or group them by asset, date, and event type/i);
+  assert.match(skill, /AI-generated operational summary/i);
+  assert.match(skill, /Recompute the summary whenever group or filters\s+change/i);
+  assert.match(skill, /Do not write generated summaries back to\s+the vault/i);
   assert.match(skill, /No sample, mock, demo, or synthetic-data banner unless the user explicitly/i);
   assert.match(skill, /every petry product or brand label exactly as lowercase `petry`/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);

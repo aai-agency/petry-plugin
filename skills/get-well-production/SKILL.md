@@ -1,12 +1,13 @@
 ---
 name: get-well-production
 description: >
-  Get a well's production data from the files, databases, APIs, or connectors
-  available in the current session and present it as a production chart, decline
-  curve, profile, or lease map. Activate for requests such as "get production
-  for HOWARD 4N", "show a decline curve", "well profile", or "map my wells",
-  and for /get-well-production. petry supplies the workflow and data shape, not
-  the production data.
+  Get production data for a well or a group such as an area, field, pad, basin,
+  subsystem, or selected set from the files, databases, APIs, or connectors
+  available in the current session. Present it as a production chart, decline
+  curve, profile, grouped overview, or lease map. Activate for requests such as
+  "get production for HOWARD 4N", "show this area's wells", "summarize subsystem
+  activity", "well profile", or "map my wells", and for /get-well-production.
+  petry supplies the workflow and data shape, not the production data.
 ---
 
 # get well production → component-first artifact
@@ -77,11 +78,63 @@ Requirements:
 - Oil is the primary decline series when present, then gas, then water.
 - Compute KPIs only from available values and label their units.
 
+For an area, field, pad, basin, subsystem, or selected set, extend the model
+with an explicit group and retain each contributing asset:
+
+```json
+{
+  "group": {
+    "id": "source identifier or stable selection key",
+    "name": "exact group or selection name",
+    "type": "area | field | pad | basin | subsystem | selection",
+    "parent_id": "parent identifier when available"
+  },
+  "members": [
+    {
+      "id": "source asset identifier",
+      "name": "exact asset name",
+      "status": "status when available",
+      "series": { "months": [], "oil": [], "gas": [], "water": [] },
+      "kpis": {},
+      "activity": []
+    }
+  ],
+  "aggregate": {
+    "series": { "months": [], "oil": [], "gas": [], "water": [] },
+    "kpis": {},
+    "activity": []
+  },
+  "active_filters": {
+    "asset_ids": [],
+    "statuses": [],
+    "event_types": [],
+    "date_from": null,
+    "date_to": null
+  }
+}
+```
+
+Group requirements:
+
+- Aggregate volumes only after aligning every member to the same calendar and
+  unit. Do not replace missing member values with zero unless the source defines
+  them as zero.
+- Preserve the member asset ID and name on every KPI contribution and activity
+  record so a grouped value can always drill back to its source.
+- Report totals and distributions separately. For example, distinguish total
+  oil from average well rate and show the denominator for averages.
+- Recompute grouped series, KPIs, event counts, and summaries from the same
+  active filter set; never display a stale unfiltered summary beside filtered
+  metrics.
+
 ## Read petry observations
 
 When a connected project exists, read `.petry/vault/*.md` and legacy
-`.petry/insights/*.md`. Select only files whose decoded
-`<!-- petry:asset ref="..." -->` exactly matches the requested asset.
+`.petry/insights/*.md`. For one well, select only files whose decoded
+`<!-- petry:asset ref="..." -->` exactly matches the requested asset. For a
+group, select the group record when present plus records whose exact asset refs
+belong to the resolved member set. Do not use fuzzy names to add a well to a
+group.
 
 Parse rows shaped like:
 
@@ -89,9 +142,10 @@ Parse rows shaped like:
 - **[event]** 2026-06-10 — Well returned to production. <!-- petry:obs type="event" valid_at="2026-06-10" captured_at="..." source="session" -->
 ```
 
-Map each row to `{ type, date, text }`, using `valid_at` as `date` and omitting
-the date when it is empty. Existing optional `hash` attributes do not affect
-rendering. Do not edit the vault while producing a chart.
+Map each row to `{ asset_id, asset_name, type, date, text, source }`, using
+`valid_at` as `date` and omitting the date when it is empty. Existing optional
+`hash` attributes do not affect rendering. Do not edit the vault while
+producing a chart.
 
 ## Build and show the result
 
@@ -121,6 +175,42 @@ Use the library component that owns the interaction:
   when requested and when their required inputs, including a Mapbox token, are
   available.
 
+### Grouped asset interfaces
+
+For grouped scopes, compose the available library primitives before filling
+gaps with custom UI:
+
+- Use `ChartGroup` for the filtered aggregate oil, gas, and water series.
+- Use `EventTimeline` for the filtered event collection and its built-in dialog
+  for the final single-event detail.
+- When the package has no grouped KPI, member-performance, filter, summary, or
+  multi-event drill-down component, generate those pieces as explicit custom
+  fallbacks. Do not recreate a library chart, timeline, or single-event dialog.
+- Keep the selected hierarchy path visible, such as
+  `area / subsystem / selected wells`, and provide asset, status, event-type,
+  and date filters when the corresponding fields exist.
+
+Every grouped number or event grouping must be interactive:
+
+- Clicking a KPI opens an accessible drill-down dialog showing the contributing
+  assets or records, calculation, units, selected period, and current filters.
+- Clicking an event count, cluster, or summary statement opens an accessible
+  multi-event dialog containing the associated source events. Let the user sort
+  or group them by asset, date, and event type, then open an individual event in
+  the library's detail dialog.
+- Clicking a member row drills into the existing single-well profile without
+  losing the parent scope or filter context.
+
+Include an AI-generated operational summary for the exact visible scope. Build
+it only from the filtered production values and petry observations already
+loaded into the artifact; do not invent causes, recommendations, or missing
+events. State the covered asset count and date range, distinguish observed facts
+from interpretation, and cite the supporting asset names or source-event count
+inside each summary section. Recompute the summary whenever group or filters
+change. A summary sentence must be clickable and open the same supporting-event
+dialog used by grouped event counts. Do not write generated summaries back to
+the vault unless the user separately requests capture.
+
 Generate custom UI only when the installed package has no applicable component
 or the surface cannot build React. For example, if the package does not export a
 production table, a responsive semantic HTML table behind a disclosure is an
@@ -142,6 +232,8 @@ Include:
 - Useful KPIs derived from the data.
 - Dated petry activity as chart annotations when practical and through
   `EventTimeline` in all component-capable artifacts.
+- For grouped scopes, a filter-aware AI summary, aggregate KPIs, member ranking,
+  and grouped event access with traceable drill-down to each contributing asset.
 - No sample, mock, demo, or synthetic-data banner unless the user explicitly
   asks for that label. Keep source provenance neutral and factual.
 - Render every petry product or brand label exactly as lowercase `petry`; never
@@ -173,6 +265,12 @@ build output:
 - Exercise chart hover, zoom, or presentation controls that the selected chart
   component exposes.
 - Exercise every custom fallback interaction, including table disclosures.
+- For grouped scopes, change at least one hierarchy, asset, or date filter and
+  confirm the aggregate chart, KPIs, member list, event collection, and AI
+  summary update together.
+- Open a KPI drill-down and a grouped-event or summary drill-down. Confirm their
+  contents match the active filters, can sort or group by asset and date, and
+  can reach a library single-event detail dialog without losing context.
 - Confirm there are no console errors, unexpected network requests, or
   horizontal overflow at split-pane and mobile widths.
 

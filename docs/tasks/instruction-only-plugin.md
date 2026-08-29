@@ -23,6 +23,8 @@ renderer.
 - [x] Require click-through verification of the library event detail dialog.
 - [x] Limit generated UI to capabilities the library does not provide.
 - [x] Normalize the petry brand to lowercase across shipped text and metadata.
+- [x] Define grouped area, field, pad, basin, subsystem, and selection artifacts.
+- [x] Require traceable KPI, event, and AI-summary drill-downs for groups.
 
 ## Decisions
 
@@ -35,6 +37,10 @@ renderer.
   `@aai-agency/og-components` first whenever React bundling is available.
 - Custom artifact UI is limited to library gaps and must not be represented as
   a library component.
+- Grouped artifacts keep every aggregate contribution traceable to its member
+  asset, and all filters update charts, KPIs, events, and summaries together.
+- AI summaries are derived from the visible filtered production and vault
+  context, link back to supporting events, and are never captured automatically.
 - Version `0.3.0` marks the removal of the executable runtime contract;
   `0.3.1` adds the responsive-artifact rule discovered during live visual QA.
 - Version `0.4.0` makes component-first artifact generation the default, adds
@@ -85,3 +91,15 @@ renderer.
   fallback, responsive widths, and lowercase `petry` labels also passed live
   interaction checks with no runtime errors or external requests.
 - PR #9 passes its Ubuntu and Windows validation jobs.
+- A live grouped-area preview combined eight wells across ESP and rod-lift
+  subsystems. Selecting ESP updated its five KPIs, three aggregate chart panels,
+  ranked member list, event clusters, and precomputed AI briefing to the same
+  four-well scope.
+- The grouped custom fallbacks passed KPI contributor sorting, summary-to-source
+  event drill-down organized by asset/date/type, member-well drill-in/back with
+  filters preserved, and responsive checks. Selecting a supporting event opened
+  the library `EventDetailDialog`; Escape returned to the grouped event dialog
+  without losing its asset organization.
+- Cowork's grouped interaction suite passed 25/25 with no runtime errors,
+  external requests, browser storage, or horizontal overflow at 1280, 900, 760,
+  and 390 px.

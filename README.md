@@ -6,7 +6,7 @@ runtime, renderer, server, or backend:
 | Skill | What Claude does |
 |---|---|
 | **`/capture`** | Writes an approved field observation into the connected project's local Markdown vault. |
-| **`/get-well-production`** | Retrieves production from the sources available in the session and creates a component-first inline chart or well-profile artifact. |
+| **`/get-well-production`** | Retrieves production from the sources available in the session and creates a component-first well profile or grouped area, field, pad, basin, or subsystem overview. |
 
 The loop is intentionally simple: capture writes structured Markdown under
 `.petry/vault/`; production reads the same observations and includes them in the
@@ -67,8 +67,10 @@ uses the latest compatible version of the free
 [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components)
 package before generating custom UI. Charts use `Chart` or `ChartGroup`; well
 history uses `EventTimeline` and its built-in detail dialog. Custom UI is only
-for gaps in the library, such as a semantic production table. The package is a
-generation-time dependency in the artifact workspace, not a petry plugin
-runtime dependency.
+for gaps in the library, such as a semantic production table or grouped KPI,
+filter, ranking, summary, and multi-event drill-down. Grouped values and AI
+summary statements remain clickable and traceable to their contributing assets
+and source events. The package is a generation-time dependency in the artifact
+workspace, not a petry plugin runtime dependency.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
