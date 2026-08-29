@@ -76,3 +76,12 @@ renderer.
   custom fallback.
 - `pnpm run check` passes five release invariants for v0.4.0; both skills pass
   `quick_validate.py`; and `claude plugin validate .` passes.
+- A live Cowork rebuild resolved and bundled the published
+  `@aai-agency/og-components@0.7.0`: `ChartGroup` rendered the oil, gas, and
+  water panels, and `EventTimeline` rendered all eight vault observations.
+- Clicking the June 15 tubing-pressure row opened the library's built-in
+  accessible dialog with the exact observation text, date, type, source, and
+  valid date; Escape closed it. Chart controls, the explicitly custom table
+  fallback, responsive widths, and lowercase `petry` labels also passed live
+  interaction checks with no runtime errors or external requests.
+- PR #9 passes its Ubuntu and Windows validation jobs.
