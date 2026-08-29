@@ -1,65 +1,71 @@
-# petry — a free O&G plugin for Claude Code
+# petry — instruction-only O&G skills for Claude
 
-Two verb skills every oil & gas team wants from an AI agent, free and with no backend. Each **activates on its own** when you talk about a well, and you can also invoke it by name:
+Petry gives Claude and Cowork two oil-and-gas workflows without shipping a
+runtime, renderer, server, or backend:
 
-| Skill | What it does |
+| Skill | What Claude does |
 |---|---|
-| **`/get-well-production <well>`** | Pulls a well's production data **from whatever you're connected to** (your files, a database, an MCP) and renders it as a self-contained oil/gas/water production chart — or a fuller profile card with metadata + KPIs. |
-| **`/capture <well>: <what you saw>`** | Saves one field insight to your local Markdown knowledge vault — and it lights up on that well's production profile as a dated annotation band. Schema upgrades cleanly to a real knowledge base. |
+| **`/capture`** | Writes an approved field observation into the connected project's local Markdown vault. |
+| **`/get-well-production`** | Retrieves production from the sources available in the session and creates a native inline chart or well-profile artifact. |
 
-> Skills are verb-named, so you invoke them bare: `/get-well-production`, `/capture`. (Claude Code also lists a namespaced form, `/petry:get-well-production`, to disambiguate if another plugin ever ships the same verb — but you don't type it.)
-
-**The loop:** `/capture` writes to a local vault → `/get-well-production` reads that vault and surfaces the captured events right on the well's chart. Your own single-player knowledge vault, no backend. (The paid Petry MCP adds real graph parsing + multiplayer.)
+The loop is intentionally simple: capture writes structured Markdown under
+`.petry/vault/`; production reads the same observations and includes them in the
+next artifact. The vault stays on the user's computer inside the connected
+project.
 
 ## Install
 
-In any Claude Code session:
+In Claude Code or Cowork, add the marketplace and install Petry:
 
-```
+```text
 /plugin marketplace add aai-agency/petry-plugin
-/plugin install petry@aai-agency
-```
-
-(Or the shell form: `claude plugin marketplace add aai-agency/petry-plugin && claude plugin install petry@aai-agency`.)
-
-For development, from a local checkout:
-
-```
-/plugin marketplace add <path-to-your-checkout>/petry-plugin
 /plugin install petry@aai-agency
 ```
 
 ## Requirements
 
-- **None to start.** Charts render as offline HTML — no API key, no Mapbox token, no server.
-- Production data comes from **your** connected sources — a CSV/Excel/JSON export, a database, or an MCP. The plugin is source-agnostic; it does not depend on Petry for data. With nothing connected, it can render the bundled `@aai-agency/og-components` sample data (clearly labeled) so you can see the shape.
-- The real interactive components (deck.gl map, editable decline curve) need a React app — `get-well-production` scaffolds that on request (`pnpm add @aai-agency/og-components`), and the map needs a free [Mapbox token](https://account.mapbox.com/access-tokens/).
+There are no runtime dependencies. Petry contains only two `SKILL.md` files and
+plugin metadata. Claude uses the current surface's own connected-folder, data,
+and artifact capabilities.
 
-## How it works
+Production data must come from a source available to the session, such as a
+CSV, Excel workbook, JSON file, connected database, API, or MCP. Petry never
+invents production unless the user explicitly asks for sample data.
 
-- **Charts** — `get-well-production` knows the real [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components) API (Map, ProductionChart, DeclineCurve, AssetDetailCard). Its offline profile uses the real `DeclineCurve` for oil, plots gas and water as contextual series, and adds dated vault activity as annotation bands plus an activity list.
-- **Vault** — `capture` appends one observation per fact to a collision-safe Markdown file under `.petry/vault/`. The vault is idempotent (no duplicates) and every observation records `type`, `text`, `valid_at`, and `source`. Existing `.petry/insights/` files from `0.1.x` remain readable.
+## Vault format
 
-## Layout
+New observations live at `<connected-project>/.petry/vault/`. Petry also reads
+legacy `.petry/insights/` files. An asset file remains ordinary Markdown:
 
+```md
+# HOWARD 4N-28HZ
+
+<!-- petry:asset ref="HOWARD 4N-28HZ" slug="howard-4n-28hz" -->
+
+## Observations
+
+- **[measurement]** 2026-06-10 — Rate back to 280 bbl/d. <!-- petry:obs type="measurement" valid_at="2026-06-10" captured_at="2026-08-29T19:30:00.000Z" source="session" -->
 ```
-.claude-plugin/plugin.json        plugin manifest
-.claude-plugin/marketplace.json   lets this repo act as a marketplace ("aai-agency")
-skills/get-well-production/        chart skill + preview + device-portable renderer
-skills/capture/                    capture skill + device-portable vault store
-scripts/capture.mjs                compatibility launcher for the capture helper
-scripts/render-preview.mjs         compatibility launcher for the renderer
-UPGRADE.md                         moving the local vault into the Petry knowledge base
+
+`/capture` handles approval, collision-safe asset files, duplicate detection,
+and corrections. `/get-well-production` reads this shape without editing it and
+surfaces the activity in the generated artifact.
+
+## Repository layout
+
+```text
+.claude-plugin/                 marketplace and plugin metadata
+skills/capture/SKILL.md         capture behavior and Markdown contract
+skills/get-well-production/SKILL.md
+                                production retrieval and artifact contract
+test/release.test.mjs           package-shape and instruction invariants
+UPGRADE.md                      mapping the local vault to Petry's context graph
 ```
 
-## Upgrading to a real knowledge base
-
-The local vault is perfect for one person on one machine. When you want temporal history, hybrid search, per-asset AI summaries, and multiplayer access, the same observations replay into the paid **Petry context-graph** MCP — nothing is re-typed. See [`UPGRADE.md`](./UPGRADE.md).
-
-## Coming next
-
-Session lifecycle (auto-capture at session start/end, tied into the Petry app) is Phase 2 — this release keeps the core tight.
-
----
+For React application work requested explicitly by a user, the production skill
+can use the free
+[`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components)
+package. That is a separate application-development path, not a plugin runtime
+dependency.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency

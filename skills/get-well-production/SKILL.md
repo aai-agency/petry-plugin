@@ -1,225 +1,134 @@
 ---
 name: get-well-production
 description: >
-  Get a well's production data from whatever this session is connected to and
-  render it as a production chart (oil/gas/water) or full profile card, using the
-  free @aai-agency/og-components library. Activate when the user wants a well's
-  production, a production chart or profile/card, a decline curve, or a lease map
-  — e.g. "get well production for HOWARD 4N", "chart production for this well",
-  "show me a decline curve", "well profile for COASTAL 14", "map my Bakken wells".
-  Invoke it as /get-well-production. The data does NOT come from Petry — it comes
-  from the user's own connected sources.
+  Get a well's production data from the files, databases, APIs, or connectors
+  available in the current session and present it as a production chart, decline
+  curve, profile, or lease map. Activate for requests such as "get production
+  for HOWARD 4N", "show a decline curve", "well profile", or "map my wells",
+  and for /get-well-production. Petry supplies the workflow and data shape, not
+  the production data.
 ---
 
-# Get well production → chart
+# Get well production → native artifact
 
-Pull a well's production from whatever the user is connected to, then render it
-with **`@aai-agency/og-components`** — a free, MIT, npm-published React library
-(maps via deck.gl/mapbox, charts via uPlot, decline-curve editor, asset cards).
-Free, no backend, no keys to start.
+Petry is an instruction-only skill. Retrieve the user's data dynamically and
+build the result with Claude's native artifact capabilities. Do not look for,
+execute, copy, or create plugin helper programs, bundled templates, or renderers.
 
-## Step 1 — get the data (from whatever THIS session is connected to)
+## Get the data
 
-The production data does **not** come from Petry. Pull it from what the user has,
-in this order:
+Use sources in this order:
 
-1. **A source they named** — a file path, spreadsheet, table, or URL. Read it.
-2. **Data already in the conversation** — numbers they pasted or a file attached.
-3. **A connected source** — an MCP server, database, or API in this session that
-   returns production history. Use it.
-4. **Nothing connected?** Ask them to point at the data (a CSV/Excel/JSON export).
-   Only on explicit request, fall back to the library's sample data — and label
-   the output as sample data, never as their real production.
+1. A file, spreadsheet, database table, URL, or connector the user named.
+2. Data already attached or pasted in the conversation.
+3. A relevant connected database, API, or MCP available in this session.
+4. If nothing is connected, ask the user to attach or identify a CSV, Excel,
+   JSON, or database source.
 
-Never invent production numbers. Partial data is fine — chart what you have and
-say what's missing. Normalize to monthly oil / gas / water series with clear
-units; compute basic KPIs (peak oil, latest rate, months on production,
-cumulative) if the source didn't provide them.
+Use sample or representative data only when the user explicitly requests it,
+and label it prominently. Never present invented production as real.
 
-For a **profile card** (the fuller view the user may ask for as "well profile" or
-"overview"), also gather identifying fields — operator, status, county/basin/
-state, formation, first-production date — and pass them as the `well` header.
+Read database sources without modifying them. Preserve the source's values and
+units. Partial data is acceptable; explain material gaps instead of filling them
+with invented values.
 
-## Step 2 — render (pick a path)
+## Normalize the artifact data
 
-**A. Quick preview in chat / no project handy** → build a self-contained HTML
-preview (`assets/preview.html`). Zero build, zero token, renders a production +
-decline chart and KPIs from data you have or from the library's sample data. Use
-this to *show* something immediately.
+Create an in-memory model with this shape before rendering:
 
-**B. The user has (or wants) a React app** → scaffold the **real** components.
-This is the production path — actual `<Map>`, `<ProductionChart>`,
-`<DeclineCurve>`, `<AssetDetailCard>`. Use the cheatsheet below.
-
-If you're unsure which they want, ask in one line; default to **A** for a
-one-off "show me", **B** if there's a React `package.json` in the repo.
-
-## The data model — everything is an `Asset`
-
-```ts
-type Asset = {
-  id: string;
-  name: string;
-  type: "well" | "pipeline" | "facility" | string;
-  status: "producing" | "shut-in" | "abandoned" | string;
-  coordinates: { lat: number; lng: number };
-  properties: Record<string, unknown>; // operator, cumOil, timeSeries, etc. — domain fields live HERE
-};
+```json
+{
+  "well": {
+    "id": "source identifier when available",
+    "name": "exact well name",
+    "operator": "operator when available",
+    "status": "status when available",
+    "basin": "basin when available",
+    "county": "county when available",
+    "state": "state when available",
+    "formation": "formation when available",
+    "first_production": "YYYY-MM-DD when available"
+  },
+  "series": {
+    "months": ["YYYY-MM"],
+    "oil": [0],
+    "gas": [0],
+    "water": [0],
+    "units": { "oil": "BBL/month", "gas": "MCF/month", "water": "BBL/month" }
+  },
+  "kpis": {
+    "peak_oil": null,
+    "latest_rate": null,
+    "months_on_production": null,
+    "cumulative_oil": null
+  },
+  "activity": [
+    { "type": "event", "date": "YYYY-MM-DD", "text": "exact captured observation" }
+  ],
+  "provenance": "plain-language description of the source"
+}
 ```
 
-Domain fields (operator, county, cumOil, production series) go **inside
-`properties`**, never at the top level. Production series use the `TimeSeries`
-shape: `{ id, fluidType: "oil"|"gas"|"water", curveType, unit, frequency, data: { t, v }[] }`.
+Requirements:
 
-## Path A — self-contained artifact (the REAL library, offline)
+- Align oil, gas, and water to the same ordered monthly calendar axis.
+- Use `null` for a missing measurement; do not remove a month to hide a gap.
+- Preserve each fluid's source unit or state any explicit conversion.
+- Oil is the primary decline series when present, then gas, then water.
+- Compute KPIs only from available values and label their units.
 
-`assets/preview.html` renders the **actual `@aai-agency/og-components`
-`DeclineCurve`** (React + uPlot bundled inline) inside a card shell — always
-light theme, fully self-contained and offline. **Do not hand-edit it or replace
-its placeholder directly.** It is generated by `build/build.mjs`; fill it only
-through `scripts/render-preview.mjs`, which safely embeds user-sourced data.
+## Read Petry observations
 
-1. Read `assets/preview.html` (relative to this skill).
-2. **Pull this well's captured insights from the local vault** so they surface on
-   the profile — this closing of the loop is the point:
-   ```bash
-   node "${CLAUDE_SKILL_DIR}/../capture/scripts/capture.mjs" export --asset "<well>"
-   ```
-   It returns `{ observations: [{ type, text, valid_at, ... }] }`. Map each to an
-   `activity` entry `{ type, date: <valid_at>, text }`. If the vault has nothing
-   for this well, omit `activity`.
-3. Write a `CHART_DATA` JSON file containing the well header
-   (name/operator/status/basin), KPIs, and aligned monthly arrays:
-   `series: { months, oil, gas, water, units: { oil, gas, water } }`. Oil drives
-   the decline when available; gas, then water, becomes the primary series when
-   oil is absent. Remaining fluids render as context on the same calendar axis.
-   Missing values may be `null`; never remove a month to hide a gap. Add
-   the `activity` from step 2. The real `DeclineCurve` plots the primary fluid's
-   actuals plus a forecast; each captured
-   `activity` item with a date renders as a **native annotation band on the
-   curve** (color-matched: event=amber, decision=purple, correction=red), and all
-   items list in the card's **Activity panel**. If the user didn't give production
-   numbers, say you're using representative sample values and make that visible —
-   never present synthesized numbers as if they were the user's real data.
-4. Render the artifact through the plugin script:
-   ```bash
-   node "${CLAUDE_SKILL_DIR}/scripts/render-preview.mjs" \
-     --data "/absolute/path/to/chart-data.json" \
-     --out "/absolute/path/to/<well>-production.html"
-   ```
-   Never use manual string replacement; the renderer prevents well names,
-   notes, or source data from escaping the embedded JSON/HTML context.
-5. Open or present the rendered output. It is fully offline (no CDN, no token).
+When a connected project exists, read `.petry/vault/*.md` and legacy
+`.petry/insights/*.md`. Select only files whose decoded
+`<!-- petry:asset ref="..." -->` exactly matches the requested asset.
 
-`${CLAUDE_SKILL_DIR}` resolves to this skill on the active execution surface.
-Use these skill-local paths directly; never locate, copy, base64-transfer, or
-mirror the plugin's scripts between Cowork's cloud and device environments.
+Parse rows shaped like:
 
-This preview is a fast look, not the real deck.gl map. For the interactive map,
-lasso selection, overlays, and the editable decline curve, go to Path B — tell
-the user it's one `pnpm add` away.
-
-## Path B — scaffold the real components
-
-### Install
-
-```bash
-pnpm add @aai-agency/og-components mapbox-gl
+```md
+- **[event]** 2026-06-10 — Well returned to production. <!-- petry:obs type="event" valid_at="2026-06-10" captured_at="..." source="session" -->
 ```
 
-Required CSS — app entry:
+Map each row to `{ type, date, text }`, using `valid_at` as `date` and omitting
+the date when it is empty. Existing optional `hash` attributes do not affect
+rendering. Do not edit the vault while producing a chart.
 
-```ts
-import "mapbox-gl/dist/mapbox-gl.css";
-```
+## Build and show the result
 
-Required Tailwind (v4) — app CSS, after `@import "tailwindcss";`:
+For a one-off chart, profile, or decline-curve request, create a native Cowork
+artifact directly from the normalized model and show it inline. The artifact
+should be self-contained and must not depend on a plugin file, local server,
+external CDN, browser storage, or hidden network request.
 
-```css
-@import "@aai-agency/og-components/styles.css";
-```
+Include:
 
-Mapbox token (maps only): get one at https://account.mapbox.com/access-tokens/ →
-Vite `VITE_MAPBOX_TOKEN`, Next `NEXT_PUBLIC_MAPBOX_TOKEN`.
+- Well identity/status and clear data provenance.
+- Oil, gas, and water history with units and a readable legend.
+- A decline or forecast line only when supported by the available history;
+  distinguish forecasts visually from actuals.
+- Useful KPIs derived from the data.
+- Dated Petry activity as chart annotations when practical and as a readable
+  activity list in all cases.
+- A visible sample-data notice when applicable.
 
-### Component cheatsheet
+Use accessible colors, text alternatives/labels, and responsive layout. Escape
+user-provided text before placing it in HTML or executable contexts. Present the
+artifact inline; save a copy into the connected project only when the user asks.
 
-| Need | Component | Key props |
-|---|---|---|
-| Interactive asset map | `Map` | `assets`, `mapboxAccessToken`, `colorBy`, `showDetailCard`, `enableOverlayUpload` |
-| Oil/gas/water production | `ProductionChart` | `series: TimeSeries[]` |
-| Generic time series | `LineChart` | `series: TimeSeries[]` |
-| Decline curve / forecast editor | `DeclineCurve` | `production`, `time`, `initialSegments`, `initialAnnotations`, `unit`, `unitsPerYear` |
-| Asset info panel | `AssetDetailCard` | `asset`, `detailSections` |
-| Multi-select panel | `SelectionPanel` | `assets`, `overlayFeatures` |
-| KMZ/KML/GeoJSON overlays | `OverlayManager` | `overlays`, `onUpload` |
+If the current surface cannot create a native artifact, create a standalone HTML
+file in the connected project using Claude's ordinary file tools and open it for
+the user. This fallback is generated for the current request; it is not a Petry
+runtime dependency.
 
-Imports (all named, from the package root unless noted):
+## React application requests
 
-```ts
-import { Map, ProductionChart, LineChart, DeclineCurve, AssetDetailCard,
-         SelectionPanel, OverlayManager, Tooltip, TooltipProvider } from "@aai-agency/og-components";
-import type { Asset, TimeSeries, MapViewState, Segment, Annotation } from "@aai-agency/og-components";
-import { getTimeSeries, filterPlottable, getAssetColor, formatNumber } from "@aai-agency/og-components";
-import { LocalStorageStore, createSqliteStore } from "@aai-agency/og-components/services";
-```
-
-### Sample data — prototype instantly, no synthesizing
-
-```ts
-import { sampleAssets,                       // 50 real wells (Bakken + DJ), 24-mo series
-         sampleDeclineCurveProduction,
-         sampleDeclineCurveSegments,
-         sampleDeclineCurveAnnotations } from "@aai-agency/og-components/sample-data";
-```
-
-Minimal map:
-
-```tsx
-import { Map, type Asset } from "@aai-agency/og-components";
-import { sampleAssets } from "@aai-agency/og-components/sample-data";
-import "mapbox-gl/dist/mapbox-gl.css";
-
-const MapPage = () => (
-  <Map assets={sampleAssets} mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
-       colorBy="status" showDetailCard enableOverlayUpload />
-);
-```
-
-Decline curve:
-
-```tsx
-import { DeclineCurve } from "@aai-agency/og-components";
-import { sampleDeclineCurveProduction as p, sampleDeclineCurveSegments as s,
-         sampleDeclineCurveAnnotations as a } from "@aai-agency/og-components/sample-data";
-
-const Decline = () => (
-  <DeclineCurve production={p.values} time={p.time} initialSegments={s}
-    initialAnnotations={a} timeUnit="day" unit="BBL/day" unitsPerYear={365} startDate="2024-01-01" />
-);
-```
-
-### No project yet? Stand up a Vite playground
-
-```bash
-pnpm create vite@latest og-preview -- --template react-ts
-cd og-preview && pnpm add @aai-agency/og-components mapbox-gl tailwindcss @tailwindcss/vite
-```
-
-Wire Tailwind v4 (`@tailwindcss/vite` plugin + `@import "tailwindcss"; @import "@aai-agency/og-components/styles.css";` in `src/index.css`), drop a component from above into `App.tsx`, add `VITE_MAPBOX_TOKEN` to `.env` if using the map, then `pnpm dev`. Screenshot or open it to show the result.
-
-## Rules
-
-- Use **arrow functions** (`const X = () => …`), never `function` declarations — matches the library's house style.
-- Don't guess prop names or invent components. If you need an API detail that's
-  not in this cheatsheet, check the package README (`node_modules/@aai-agency/og-components/README.md`) rather than guessing.
-- Don't add another CSS framework or a React map wrapper (react-map-gl). The
-  library uses `mapbox-gl` directly with Tailwind + shadcn tokens.
-- Keep domain fields inside `Asset.properties`.
-- Never dress up sample/synthesized numbers as the user's real production.
+When the user explicitly wants implementation inside a React application, use
+the free `@aai-agency/og-components` package rather than recreating production
+components. Inspect the installed package documentation for its current API,
+keep domain fields inside `Asset.properties`, and add Mapbox only for map views.
+Do not scaffold or install packages for an ordinary one-off artifact request.
 
 ## Related
 
-Capturing what the user *learns* while looking at these charts → the **capture**
-skill / `/capture` (logs asserted well insights to the local vault — they come
-back as markers here next time).
+Use `/capture` when the user wants to log an asserted asset observation. That
+skill writes the Markdown shape this skill reads back into future profiles.

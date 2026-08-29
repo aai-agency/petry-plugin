@@ -1,122 +1,123 @@
 ---
 name: capture
 description: >
-  Capture an asserted oil & gas field insight about a well/asset into the local
-  Petry knowledge vault. Activate automatically whenever the user states a fact,
-  measurement, event, or decision about a specific well, lease, field, or
-  operator — e.g. "the ESP on HOWARD 4N failed", "COASTAL 14 tested 280 bbl/d",
-  "we're deferring the recompletion on WELLS RANCH 12-3" — and when the user
-  explicitly says "capture that", "log this", "note this on <well>", or invokes
-  /capture. Only fires for ASSERTED facts about a named asset, never for
-  questions or hypotheticals. When it fires automatically it PROPOSES the
-  capture and writes only after the user approves; an explicit "capture that" /
-  "log this" / /capture is that approval.
+  Capture an asserted oil & gas field insight about a named well, lease, field,
+  or operator into the connected project's local Petry Markdown vault. Activate
+  for concrete measurements, events, decisions, corrections, instructions, or
+  preferences, and when the user says "capture that", "log this", "note this",
+  or invokes /capture. Never activate for questions, hypotheticals, or inferred
+  facts. Propose automatic captures and write only after approval; an explicit
+  capture request is approval.
 ---
 
 # Capture → local knowledge vault
 
-Petry keeps a plain-Markdown vault of what your team learns about its assets, on
-disk, no backend. This skill turns an asserted fact in the conversation into one
-stored **observation**. Everything captured here surfaces later on the well's
-production profile — `/get-well-production` reads the same vault and marks events
-on the chart. The stored schema is a 1:1 subset of a Petry context-graph
-observation, so the vault upgrades cleanly to the knowledge-base MCP later (see
-the plugin's `UPGRADE.md`).
+Petry is an instruction-only skill. Use Claude's connected-folder tools to read
+and write the user's project directly. Do not look for, execute, copy, or create
+plugin helper programs.
 
-## When to capture (and when not to)
+## Decide whether there is an observation
 
-Capture when the user **asserts** something concrete about a **named asset**:
+Capture only a concrete assertion about a named asset:
 
-- A measurement: rates, pressures, GOR, water cut, test results.
-- An event: a failure, shut-in, workover, restart, choke change.
-- A decision: defer, sell, recomplete, change artificial lift.
-- A correction, instruction, or preference tied to the asset.
+- `measurement`: rate, pressure, GOR, water cut, test result, or another value.
+- `event`: failure, shut-in, workover, restart, choke change, or dated occurrence.
+- `decision`: defer, sell, recomplete, change lift, or another chosen action.
+- `correction`: an earlier observation is explicitly corrected.
+- `instruction` or `preference`: an asset-specific operating direction.
+- `note`: an asserted asset fact that fits none of the above.
 
-Do **not** capture:
+Do nothing for questions, hypotheticals, inferred facts, chit-chat, or statements
+without a named asset. Do not mention capture when nothing qualifies.
 
-- Questions ("what's the water cut on HOWARD 4N?").
-- Hypotheticals or things you inferred but the user didn't state.
-- Chit-chat, or anything not about a specific asset.
+## Get permission
 
-If a turn has no assertable asset fact, do nothing — say nothing about capturing.
+- An explicit `/capture`, "capture that", "log this", or "note this" authorizes
+  the write. Do not ask again.
+- When this skill activates automatically, propose the asset, type, and exact
+  sentence in one line. Write only after the user approves.
+- Before correcting or replacing existing context, show the stored observation
+  beside the proposed correction and get explicit approval.
+- Batch multiple observations into one proposal; approval may cover a subset.
 
-## Ask before writing
+## Locate the vault
 
-Never create or update anything in the vault without the user's go-ahead.
+Use the root of the connected project that contains the asset context. If more
+than one connected project could be the target, ask which one. The writable
+vault is `<project>/.petry/vault/`. Create that directory when the first approved
+observation is written. Also read legacy observations from
+`<project>/.petry/insights/`, but place new files in `vault/`.
 
-- **The user explicitly asked** — "capture that", "log this", "note this on
-  <well>", or `/capture`. That request IS the permission; capture immediately,
-  don't ask again.
-- **The skill fired automatically** off an asserted fact. Propose first, in one
-  line: the well, the observation type, and the exact sentence you would store —
-  e.g. `Capture HOWARD 4N-28HZ · measurement · "ESP swapped; rate back to
-  280 bbl/d"?` Run the capture script only after the user says yes. If they
-  don't respond or decline, drop it silently — never capture "while you wait".
-- **Updating existing context** (a correction, or amending an earlier
-  observation): show what's stored now next to what would replace it, and
-  confirm before writing — even when the user explicitly asserted the new fact.
+Never write outside the connected project. Never create a similarly named path
+in a cloud or temporary filesystem.
 
-Batch the ask: several facts in one turn get one proposal listing all of them,
-and one yes covers the batch. The user can approve a subset.
+## Find or create the asset file
 
-## How to capture
+Search every Markdown file in `.petry/vault/` and `.petry/insights/` for an
+exact asset header match before choosing a filename:
 
-For each approved fact, run the capture script once. It is idempotent — the same
-fact captured twice is a no-op, so you never create duplicates.
-
-```bash
-node "${CLAUDE_SKILL_DIR}/scripts/capture.mjs" add \
-  --asset "HOWARD 4N-28HZ" \
-  --type measurement \
-  --text "ESP swapped; rate back to 280 bbl/d" \
-  --valid-at 2026-06-10 \
-  --source "session"
+```md
+<!-- petry:asset ref="HOWARD 4N-28HZ" slug="howard-4n-28hz" -->
 ```
 
-- `--asset` — the well/lease/field/operator name exactly as the user says it.
-  Don't normalize or guess an ID.
-- `--type` — one of: `note` `decision` `event` `measurement` `correction`
-  `instruction` `preference`. Pick the most specific one; default `note`.
-- `--text` — one clean sentence. **Keep the user's numbers and units exactly** —
-  never round or convert. Don't embellish or infer values that weren't stated.
-- `--valid-at` — the date the fact is true for (`YYYY-MM-DD`), if the user gave
-  one. Omit if unknown.
-- `--source` — leave as `session` unless the user names a source (a report, a
-  gauge, a person).
+Decode the HTML entities `&quot;`, `&lt;`, `&gt;`, and `&amp;` when comparing
+`ref`. Reuse the matching file even when its filename differs from the current
+slug. For a new asset:
 
-`${CLAUDE_SKILL_DIR}` points at this skill's directory on the active execution
-surface. Always use it instead of locating or copying plugin files manually.
-This keeps the command on the same Cowork device runtime as the user's writable
-project folder and also works in Claude Code.
+1. Lowercase its name, replace non-ASCII letters/digits with `-`, collapse
+   repeated dashes, trim dashes, and use `unknown` if empty.
+2. Try `<slug>.md`. If that filename already belongs to a different asset, try
+   `<slug>-2.md`, then `-3`, until unused.
+3. Create this shape, preserving the user's asset name exactly in the heading
+   and `ref`:
 
-## After capturing
+```md
+# HOWARD 4N-28HZ
 
-Confirm in **one line**: the well, the observation type, and the exact sentence
-stored. Example: `Logged HOWARD 4N-28HZ · measurement · "ESP swapped; rate back
-to 280 bbl/d".` Don't over-narrate. If several facts were in one turn, capture
-each and give a one-line summary of how many were logged to which wells.
+<!-- petry:asset ref="HOWARD 4N-28HZ" slug="howard-4n-28hz" -->
 
-If a new fact contradicts something you can see already logged (check with
-`node "${CLAUDE_SKILL_DIR}/scripts/capture.mjs" list --asset "<well>"`), flag
-the conflict and — after the user confirms (see "Ask before writing") — capture
-the fix as a `correction`.
+## Observations
+```
 
-## Where it's stored
+HTML-escape `&`, `"`, `<`, and `>` inside comment attributes.
 
-One collision-safe Markdown file per asset under `.petry/vault/` in the current
-project (or `$PETRY_VAULT_DIR`). Vaults created by Petry `0.1.x` under
-`.petry/insights/` remain readable. The files are human-readable and safe to
-commit or keep private. The skill fires as you assert facts, so you never have
-to run a command — but nothing is written until you approve the proposed
-capture — and the vault is idempotent, so re-capturing the same fact is a
-no-op. Ask for the well's profile
-(`/get-well-production`) and dated events show up as bands on its production
-chart.
+## Observation shape
 
-## Upgrading to a real knowledge base
+Append one line under `## Observations` for each approved fact:
 
-The local vault is great for one person on one machine. When the team needs
-temporal history, hybrid search, per-asset AI summaries, and multiplayer access,
-the same observations replay into the Petry context-graph MCP — every observation
-carries the type, text, valid_at, and source it needs, so nothing is lost in the
-move. See the plugin's `UPGRADE.md`.
+```md
+- **[measurement]** 2026-06-10 — ESP swapped; rate back to 280 bbl/d <!-- petry:obs type="measurement" valid_at="2026-06-10" captured_at="2026-08-29T19:30:00.000Z" source="session" -->
+```
+
+Required behavior:
+
+- `type`: one of `note`, `decision`, `event`, `measurement`, `correction`,
+  `instruction`, or `preference`.
+- Visible date: `valid_at` when known; otherwise the UTC capture date.
+- `text`: one clean sentence. Preserve the user's numbers and units exactly.
+  Collapse line breaks/whitespace and replace `<!--` or `-->` with an em dash.
+- `valid_at`: a real `YYYY-MM-DD` date when supplied, otherwise empty.
+- `captured_at`: current UTC ISO-8601 timestamp.
+- `source`: the named source, or `session` by default.
+- HTML-escape comment attribute values as described above.
+- Existing rows may include a `hash` attribute. Preserve it; new rows do not
+  need one.
+
+## Prevent duplicates and contradictions
+
+Before appending, read all observations for the exact asset from both vault
+directories. Treat the new observation as a duplicate when `type`, `valid_at`,
+and normalized visible text match an existing row. Normalize text only for this
+comparison: lowercase, trim, and collapse whitespace. A duplicate is a no-op.
+
+If the new fact conflicts with existing context, show the conflict and follow
+the correction approval rule instead of silently appending contradictory facts.
+
+## Finish
+
+After a successful write, confirm in one line with the asset, type, and exact
+stored sentence. For a duplicate, say it was already logged and that nothing
+changed. Do not over-narrate implementation details.
+
+The `/get-well-production` skill reads this same shape and surfaces dated
+observations in the well profile.

@@ -1,7 +1,7 @@
 {
   "name": "petry",
-  "description": "Free oil & gas toolkit for Claude Code. Pull a well's production data from whatever you're connected to and render it as a production chart, and capture field insights to a local knowledge vault that surfaces back on the well's chart. No backend, no keys.",
-  "version": "0.2.2",
+  "description": "Instruction-only oil & gas skills for Claude. Capture field observations in a connected local Markdown vault and dynamically turn connected production data into native inline artifacts. No runtime, backend, or keys.",
+  "version": "0.3.0",
   "author": {
     "name": "AAI Agency",
     "email": "husam@aai.agency",
