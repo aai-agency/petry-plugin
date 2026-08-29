@@ -80,7 +80,8 @@ const out = R("../skills/get-well-production/assets/preview.html");
 const check = process.argv.includes("--check");
 if (check) {
   const existing = existsSync(out) ? readFileSync(out, "utf8") : "";
-  if (existing !== html) {
+  const normalizeEol = (value) => value.replace(/\r\n/g, "\n");
+  if (normalizeEol(existing) !== normalizeEol(html)) {
     console.error("generated artifact is stale; run pnpm build in build/");
     process.exit(1);
   }

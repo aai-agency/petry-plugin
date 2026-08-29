@@ -40,3 +40,5 @@ copying plugin files between cloud and device environments.
   entry-point assertions use Node path semantics instead of Unix separators.
 - The Windows runner exposed a Unix-only build-tool launcher; the artifact
   build now invokes Tailwind's JavaScript entry point through Node.
+- The freshness check normalizes checkout line endings so Windows CRLF files
+  compare correctly with the generated LF bundle.
