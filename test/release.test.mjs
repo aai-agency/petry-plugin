@@ -5,11 +5,14 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.3.1", () => {
+test("release metadata is aligned at 0.4.0 with a lowercase plugin name", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
-  assert.equal(root.version, "0.3.1");
+  const marketplace = readJson(".claude-plugin/marketplace.json");
+  assert.equal(root.version, "0.4.0");
   assert.equal(plugin.version, root.version);
+  assert.equal(plugin.name, "petry");
+  assert.equal(marketplace.plugins[0].name, "petry");
 });
 
 test("the package ships exactly two instruction-only skills", () => {
@@ -41,7 +44,7 @@ test("capture defines the vault contract without a runtime dependency", () => {
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });
 
-test("production defines dynamic native artifacts without a renderer", () => {
+test("production defines component-first artifacts without a plugin renderer", () => {
   const skill = readSkill("get-well-production");
   assert.match(skill, /instruction-only skill/i);
   assert.match(skill, /native Cowork\s+artifact/i);
@@ -53,5 +56,44 @@ test("production defines dynamic native artifacts without a renderer", () => {
   assert.match(skill, /"provenance"/);
   assert.match(skill, /Never apply a\s+global `svg \{ width: 100% \}` rule/i);
   assert.match(skill, /scrollWidth.*clientWidth/i);
+  assert.match(skill, /@aai-agency\/og-components/);
+  assert.match(skill, /latest\s+compatible release/i);
+  assert.match(skill, /ChartGroup/);
+  assert.match(skill, /EventTimeline/);
+  assert.match(skill, /@aai-agency\/og-components\/asset-breakdown/);
+  assert.match(skill, /AssetScopeBinding/);
+  assert.match(skill, /ScopeFilters/);
+  assert.match(skill, /MetricCard/);
+  assert.match(skill, /RecordDrilldownDialog/);
+  assert.match(skill, /OperationalSummary/);
+  assert.match(skill, /Asset\.meta\[dimensionKey\]/);
+  assert.match(skill, /link every `TimeSeries` and `WellEvent` with `assetId`/i);
+  assert.match(skill, /mode: "dimension"/);
+  assert.match(skill, /built-in accessible\s+event detail dialog/i);
+  assert.match(skill, /Generate custom UI only when/i);
+  assert.match(skill, /does not export a\s+production table/i);
+  assert.match(skill, /area, field, pad, basin, subsystem/i);
+  assert.match(skill, /"aggregate"/);
+  assert.match(skill, /Clicking a KPI opens an accessible drill-down dialog/i);
+  assert.match(skill, /sort\s+or group them by asset, date, and event type/i);
+  assert.match(skill, /AI-generated operational summary/i);
+  assert.match(skill, /Recompute the summary whenever group or filters\s+change/i);
+  assert.match(skill, /Do not write generated summaries back to\s+the vault/i);
+  assert.match(skill, /No sample, mock, demo, or synthetic-data banner unless the user explicitly/i);
+  assert.match(skill, /every petry product or brand label exactly as lowercase `petry`/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
+});
+
+test("the petry brand is lowercase in shipped text", () => {
+  const files = [
+    "README.md",
+    "UPGRADE.md",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+    "skills/capture/SKILL.md",
+    "skills/get-well-production/SKILL.md",
+  ];
+  for (const file of files) {
+    assert.doesNotMatch(readFileSync(file, "utf8"), /\b(?:Petry|PETRY|Petree|PETREE)\b/);
+  }
 });

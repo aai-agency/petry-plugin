@@ -2,7 +2,7 @@
 name: capture
 description: >
   Capture an asserted oil & gas field insight about a named well, lease, field,
-  or operator into the connected project's local Petry Markdown vault. Activate
+  or operator into the connected project's local petry Markdown vault. Activate
   for concrete measurements, events, decisions, corrections, instructions, or
   preferences, and when the user says "capture that", "log this", "note this",
   or invokes /capture. Never activate for questions, hypotheticals, or inferred
@@ -10,9 +10,9 @@ description: >
   capture request is approval.
 ---
 
-# Capture → local knowledge vault
+# capture → local knowledge vault
 
-Petry is an instruction-only skill. Use Claude's connected-folder tools to read
+petry is an instruction-only skill. Use Claude's connected-folder tools to read
 and write the user's project directly. Do not look for, execute, copy, or create
 plugin helper programs.
 

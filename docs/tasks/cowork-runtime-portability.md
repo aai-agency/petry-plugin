@@ -5,7 +5,7 @@
 
 ## Goal
 
-Make an installed Petry plugin run capture and artifact generation against a
+Make an installed petry plugin run capture and artifact generation against a
 connected local Cowork folder without attaching the plugin source checkout or
 copying plugin files between cloud and device environments.
 

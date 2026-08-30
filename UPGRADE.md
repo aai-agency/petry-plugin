@@ -1,8 +1,8 @@
-# Upgrading the local vault to the Petry knowledge base
+# Upgrading the local vault to the petry knowledge base
 
 The free plugin stores observations as Markdown under `.petry/vault/` and reads
 legacy `.petry/insights/` files. The schema is deliberately portable so Claude
-can migrate it without a Petry export program.
+can migrate it without a petry export program.
 
 Each observation contains the fields the context graph needs:
 
