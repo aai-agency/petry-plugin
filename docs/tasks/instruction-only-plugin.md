@@ -25,6 +25,8 @@ renderer.
 - [x] Normalize the petry brand to lowercase across shipped text and metadata.
 - [x] Define grouped area, field, pad, basin, subsystem, and selection artifacts.
 - [x] Require traceable KPI, event, and AI-summary drill-downs for groups.
+- [x] Adopt shared dynamic asset breakdown primitives instead of treating
+      grouped filters, KPIs, drill-downs, and summaries as custom fallbacks.
 
 ## Decisions
 
@@ -41,6 +43,9 @@ renderer.
   asset, and all filters update charts, KPIs, events, and summaries together.
 - AI summaries are derived from the visible filtered production and vault
   context, link back to supporting events, and are never captured automatically.
+- Group dimensions are arbitrary direct keys in `Asset.meta`; `TimeSeries` and
+  `WellEvent` link through `assetId`, and one controlled scope drives every
+  installed shared primitive.
 - Version `0.3.0` marks the removal of the executable runtime contract;
   `0.3.1` adds the responsive-artifact rule discovered during live visual QA.
 - Version `0.4.0` makes component-first artifact generation the default, adds
@@ -103,3 +108,8 @@ renderer.
 - Cowork's grouped interaction suite passed 25/25 with no runtime errors,
   external requests, browser storage, or horizontal overflow at 1280, 900, 760,
   and 390 px.
+- O&G components PR #24 adds the shared `AssetScope`, `ScopeFilters`,
+  `MetricCard`, `RecordDrilldownDialog`, and `OperationalSummary` contract plus
+  `ChartGroup`/`EventTimeline` scope and dynamic metadata breakdown props. The
+  petry instructions now detect that focused export from installed declarations
+  and use it before generating any grouped fallback.

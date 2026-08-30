@@ -94,6 +94,7 @@ with an explicit group and retain each contributing asset:
       "id": "source asset identifier",
       "name": "exact asset name",
       "status": "status when available",
+      "meta": { "dynamic source classification key": "source value" },
       "series": { "months": [], "oil": [], "gas": [], "water": [] },
       "kpis": {},
       "activity": []
@@ -110,7 +111,8 @@ with an explicit group and retain each contributing asset:
     "event_types": [],
     "date_from": null,
     "date_to": null
-  }
+  },
+  "dimension_key": "direct key selected from member.meta"
 }
 ```
 
@@ -121,6 +123,10 @@ Group requirements:
   them as zero.
 - Preserve the member asset ID and name on every KPI contribution and activity
   record so a grouped value can always drill back to its source.
+- Keep classifications on each member's `meta` object. Treat `dimension_key` as
+  a dynamic direct key (`member.meta[dimension_key]`), not a fixed list or a
+  dot-path. Link every series and event to its member with `assetId` when
+  preparing library inputs; do not duplicate dimension values on those records.
 - Report totals and distributions separately. For example, distinguish total
   oil from average well rate and show the denominator for averages.
 - Recompute grouped series, KPIs, event counts, and summaries from the same
@@ -174,18 +180,36 @@ Use the library component that owns the interaction:
 - Maps and asset details: use the package's `Map` and asset-card components only
   when requested and when their required inputs, including a Mapbox token, are
   available.
+- Shared group scope: when the installed declarations export the focused
+  `@aai-agency/og-components/asset-breakdown` entry, use its `AssetScope`,
+  `ScopeFilters`, `MetricCard`, `RecordDrilldownDialog`, and
+  `OperationalSummary` primitives. Keep one controlled scope object and pass it
+  to every component that accepts it.
 
 ### Grouped asset interfaces
 
-For grouped scopes, compose the available library primitives before filling
-gaps with custom UI:
+For grouped scopes, compose the installed library primitives before filling a
+remaining gap with custom UI:
 
-- Use `ChartGroup` for the filtered aggregate oil, gas, and water series.
-- Use `EventTimeline` for the filtered event collection and its built-in dialog
-  for the final single-event detail.
-- When the package has no grouped KPI, member-performance, filter, summary, or
-  multi-event drill-down component, generate those pieces as explicit custom
-  fallbacks. Do not recreate a library chart, timeline, or single-event dialog.
+- Build package `Asset` inputs from group members, retain classifications in
+  `Asset.meta`, and link every `TimeSeries` and `WellEvent` with `assetId`.
+- Use one controlled `AssetScopeBinding` for `ScopeFilters`, `ChartGroup`, and
+  `EventTimeline`. A selected breakdown is an arbitrary direct
+  `Asset.meta[dimensionKey]` key.
+- Use `ChartGroup.assetScope` plus `breakdown`. Choose `mode: "aggregate"` for
+  one selected-scope total or `mode: "dimension"` for one series per metadata
+  value. Always supply the domain-correct aggregation explicitly; never infer
+  it from a label or unit.
+- Use `EventTimeline.assetScope` plus the same `breakdown.dimensionKey` for the
+  filtered event collection and retain its built-in dialog for final
+  single-event detail.
+- Use library `MetricCard` for interactive aggregate values,
+  `RecordDrilldownDialog` for KPI/event/summary contributors, and
+  `OperationalSummary` for evidence-linked observed facts and interpretations.
+  A record selection may hand an event to the library `EventDetailDialog`.
+- Generate a custom grouped control only when the installed declarations lack
+  that exact primitive. Do not recreate a library scope filter, KPI card,
+  contributor dialog, summary, chart, timeline, or single-event dialog.
 - Keep the selected hierarchy path visible, such as
   `area / subsystem / selected wells`, and provide asset, status, event-type,
   and date filters when the corresponding fields exist.
@@ -211,10 +235,19 @@ change. A summary sentence must be clickable and open the same supporting-event
 dialog used by grouped event counts. Do not write generated summaries back to
 the vault unless the user separately requests capture.
 
+Pass the generated result into `OperationalSummary` with `generation: "ai"`
+when that export is installed. Keep its observed facts distinct from
+interpretations, pass the supporting `DrilldownRecord` collection, and route
+`onInsightSelect` to the same contributor dialog. The component displays the
+summary; petry/Claude remains responsible for generating it from the filtered
+vault and production context.
+
 Generate custom UI only when the installed package has no applicable component
 or the surface cannot build React. For example, if the package does not export a
 production table, a responsive semantic HTML table behind a disclosure is an
-acceptable custom addition. Do not claim a custom element came from the package.
+acceptable custom addition. Do not treat grouped primitives as missing merely
+because they live under the focused `/asset-breakdown` export. Do not claim a
+custom element came from the package.
 If React bundling is unavailable, build the native fallback and state briefly
 that the component library could not be used on the current surface.
 
@@ -268,6 +301,9 @@ build output:
 - For grouped scopes, change at least one hierarchy, asset, or date filter and
   confirm the aggregate chart, KPIs, member list, event collection, and AI
   summary update together.
+- Switch the breakdown to a second available metadata key and confirm filters,
+  chart series, event filtering, KPI contributor grouping, and summary scope
+  all resolve from that direct key without changing component code.
 - Open a KPI drill-down and a grouped-event or summary drill-down. Confirm their
   contents match the active filters, can sort or group by asset and date, and
   can reach a library single-event detail dialog without losing context.

@@ -66,11 +66,13 @@ For any oil-and-gas interface that can be built as React, the production skill
 uses the latest compatible version of the free
 [`@aai-agency/og-components`](https://www.npmjs.com/package/@aai-agency/og-components)
 package before generating custom UI. Charts use `Chart` or `ChartGroup`; well
-history uses `EventTimeline` and its built-in detail dialog. Custom UI is only
-for gaps in the library, such as a semantic production table or grouped KPI,
-filter, ranking, summary, and multi-event drill-down. Grouped values and AI
-summary statements remain clickable and traceable to their contributing assets
-and source events. The package is a generation-time dependency in the artifact
-workspace, not a petry plugin runtime dependency.
+history uses `EventTimeline` and its built-in detail dialog. When the installed
+release exposes `/asset-breakdown`, grouped scopes use its dynamic `Asset.meta`
+dimensions, filters, KPI cards, contributor drill-downs, and evidence-linked
+operational summary. Custom UI is only for a remaining library gap, such as a
+semantic production table. Grouped values and AI summary statements remain
+clickable and traceable to their contributing assets and source events. The
+package is a generation-time dependency in the artifact workspace, not a petry
+plugin runtime dependency.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency

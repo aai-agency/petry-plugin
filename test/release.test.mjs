@@ -60,6 +60,15 @@ test("production defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /latest\s+compatible release/i);
   assert.match(skill, /ChartGroup/);
   assert.match(skill, /EventTimeline/);
+  assert.match(skill, /@aai-agency\/og-components\/asset-breakdown/);
+  assert.match(skill, /AssetScopeBinding/);
+  assert.match(skill, /ScopeFilters/);
+  assert.match(skill, /MetricCard/);
+  assert.match(skill, /RecordDrilldownDialog/);
+  assert.match(skill, /OperationalSummary/);
+  assert.match(skill, /Asset\.meta\[dimensionKey\]/);
+  assert.match(skill, /link every `TimeSeries` and `WellEvent` with `assetId`/i);
+  assert.match(skill, /mode: "dimension"/);
   assert.match(skill, /built-in accessible\s+event detail dialog/i);
   assert.match(skill, /Generate custom UI only when/i);
   assert.match(skill, /does not export a\s+production table/i);
