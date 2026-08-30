@@ -1,8 +1,9 @@
 ---
 name: capture
 description: >
-  Capture an asserted oil & gas field insight about a named well, lease, field,
-  or operator into the connected project's local petry Markdown vault. Activate
+  Capture an asserted oil & gas field insight about any named asset, such as a
+  well, meter, tank, pump, compressor, pipeline, facility, lease, field, or
+  operator into the connected project's local petry Markdown vault. Activate
   for concrete measurements, events, decisions, corrections, instructions, or
   preferences, and when the user says "capture that", "log this", "note this",
   or invokes /capture. Never activate for questions, hypotheticals, or inferred
@@ -119,5 +120,5 @@ After a successful write, confirm in one line with the asset, type, and exact
 stored sentence. For a duplicate, say it was already logged and that nothing
 changed. Do not over-narrate implementation details.
 
-The `/get-well-production` skill reads this same shape and surfaces dated
-observations in the well profile.
+The `/get-asset-data` skill reads this same shape and surfaces dated
+observations in the asset profile.
