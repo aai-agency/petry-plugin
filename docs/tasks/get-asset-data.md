@@ -15,7 +15,7 @@ reuse, and preserve the component-first grouped interfaces already in PR #9.
 - [x] Extend capture activation to the same asset types without changing storage.
 - [x] Document command migration and keep exactly two shipped skills.
 - [x] Run package checks and plugin validation; review schema examples and diff.
-- [ ] Commit, push, and open a pull request stacked on PR #9.
+- [x] Commit, push, and open a pull request stacked on PR #9.
 
 ## Decisions
 
@@ -43,3 +43,10 @@ reuse, and preserve the component-first grouped interfaces already in PR #9.
   well production against the written contract. This is an instruction review,
   not a live model-behavior test.
 - No fresh installed Cowork session is exercised by this task.
+
+## Delivery
+
+PR: https://github.com/aai-agency/petry-plugin/pull/10
+
+Merge PR #9 first, then retarget PR #10 to main. Neither PR was merged or
+installed by this task.
