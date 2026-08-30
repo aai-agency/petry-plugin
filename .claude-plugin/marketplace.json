@@ -1,6 +1,6 @@
 {
   "name": "aai-agency",
-  "description": "AAI Agency plugins for Claude Code. Free oil & gas tooling — production charts from your own data, and local insight capture.",
+  "description": "AAI Agency plugins for Claude Code. Free oil & gas tooling — asset profiles and charts from your own data, and local insight capture.",
   "owner": {
     "name": "AAI Agency",
     "email": "husam@aai.agency",
@@ -10,7 +10,7 @@
     {
       "name": "petry",
       "source": "./",
-      "description": "Instruction-only skills that turn connected well data into component-first artifacts and capture field observations in a local Markdown vault."
+      "description": "Instruction-only skills that turn connected asset data into component-first artifacts and capture field observations in a local Markdown vault."
     }
   ]
 }

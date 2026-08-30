@@ -20,7 +20,7 @@ test("the package ships exactly two instruction-only skills", () => {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
-  assert.deepEqual(skillDirs, ["capture", "get-well-production"]);
+  assert.deepEqual(skillDirs, ["capture", "get-asset-data"]);
 
   for (const skill of skillDirs) {
     assert.deepEqual(readdirSync(`skills/${skill}`).sort(), ["SKILL.md"]);
@@ -44,8 +44,8 @@ test("capture defines the vault contract without a runtime dependency", () => {
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });
 
-test("production defines component-first artifacts without a plugin renderer", () => {
-  const skill = readSkill("get-well-production");
+test("asset data defines component-first artifacts without a plugin renderer", () => {
+  const skill = readSkill("get-asset-data");
   assert.match(skill, /instruction-only skill/i);
   assert.match(skill, /native Cowork\s+artifact/i);
   assert.match(skill, /connected database, API, or MCP/i);
@@ -71,7 +71,7 @@ test("production defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /mode: "dimension"/);
   assert.match(skill, /built-in accessible\s+event detail dialog/i);
   assert.match(skill, /Generate custom UI only when/i);
-  assert.match(skill, /does not export a\s+production table/i);
+  assert.match(skill, /does not export an\s+asset data table/i);
   assert.match(skill, /area, field, pad, basin, subsystem/i);
   assert.match(skill, /"aggregate"/);
   assert.match(skill, /Clicking a KPI opens an accessible drill-down dialog/i);
@@ -91,7 +91,7 @@ test("the petry brand is lowercase in shipped text", () => {
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
     "skills/capture/SKILL.md",
-    "skills/get-well-production/SKILL.md",
+    "skills/get-asset-data/SKILL.md",
   ];
   for (const file of files) {
     assert.doesNotMatch(readFileSync(file, "utf8"), /\b(?:Petry|PETRY|Petree|PETREE)\b/);
