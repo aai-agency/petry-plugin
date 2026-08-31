@@ -2,15 +2,22 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const read = (file) => readFileSync(file, "utf8");
+const read = (file) => readFileSync(file, "utf8").replace(/\r\n/g, "\n");
 const capture = read("skills/capture/SKILL.md");
 const retrieval = read("skills/get-asset-data/SKILL.md");
 const jsonExamples = (text) =>
-  [...text.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) =>
+  [...text.matchAll(/```json\r?\n([\s\S]*?)\r?\n```/g)].map((match) =>
     JSON.parse(match[1]),
   );
 const observation = (text) =>
   jsonExamples(text).find((value) => value.petry?.schema_version === 2);
+
+test("JSON contract examples parse with Unix and Windows line endings", () => {
+  for (const skill of [capture, retrieval]) {
+    assert.deepEqual(jsonExamples(skill.replace(/\n/g, "\r\n")), jsonExamples(skill));
+    assert.ok(jsonExamples(skill).length > 0);
+  }
+});
 
 // Pinned upstream Edge + EntityEdge fields, not the narrow MCP input schema.
 const graphitiFields = [

@@ -64,3 +64,12 @@ Next runtime verification: use a disposable connected project and test a relevan
 date-range capture, a correction moved outside scope, and an unrelated capture
 that leaves the existing artifact untouched. Do not treat the prior CSV-only
 demo or these static checks as that verification.
+
+## Authorized merge and installation follow-up
+
+- User requested merge, installation, and another Cowork test.
+- Windows CI exposed LF-only parsing/assertions in the contract tests. Normalize
+  prose line endings and accept CRLF JSON fences; explicitly exercise both formats.
+- Local check now passes 11/11; plugin validation and whitespace check pass.
+- Pending: green cross-platform CI, merge, installed-version verification, and
+  disposable-project native capture/refresh evidence.
