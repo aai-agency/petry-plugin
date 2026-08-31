@@ -5,11 +5,11 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.4.0 with a lowercase plugin name", () => {
+test("release metadata is aligned at 0.5.0 with a lowercase plugin name", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
   const marketplace = readJson(".claude-plugin/marketplace.json");
-  assert.equal(root.version, "0.4.0");
+  assert.equal(root.version, "0.5.0");
   assert.equal(plugin.version, root.version);
   assert.equal(plugin.name, "petry");
   assert.equal(marketplace.plugins[0].name, "petry");
