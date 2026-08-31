@@ -27,7 +27,7 @@ Record the upstream revision and field coverage in UPGRADE.md.
 - [x] Define corrections, interval semantics, and old/new refresh applicability.
 - [x] Update README, migration guidance, and release metadata (0.5.0).
 - [x] Validate schema examples, package invariants, and scenario expectations.
-- [ ] Review changes, open PR, and record evidence/limitations.
+- [x] Review changes, open PR, and record evidence/limitations.
 
 ## Verification boundaries
 
@@ -54,3 +54,13 @@ reported separately from a live model or Graphiti integration test.
 - No native capture/refresh run, Graphiti write, MCP upgrade, plugin install,
   or production vault migration was performed. Current installed version remains
   0.4.0; 0.5.0 is the proposed release.
+
+## Delivery
+
+PR: https://github.com/aai-agency/petry-plugin/pull/11
+
+Branch: fix/graphiti-insight-contract. Not merged or installed by this task.
+Next runtime verification: use a disposable connected project and test a relevant
+date-range capture, a correction moved outside scope, and an unrelated capture
+that leaves the existing artifact untouched. Do not treat the prior CSV-only
+demo or these static checks as that verification.
