@@ -5,13 +5,14 @@ runtime, renderer, server, or backend:
 
 | Skill | What Claude does |
 |---|---|
-| **`/capture`** | Writes an approved field observation into the connected project's local Markdown vault. |
+| **`/capture`** | Writes approved insights with Graphiti fact metadata and refreshes only affected artifacts. |
 | **`/get-asset-data`** | Retrieves data for any asset (wells, meters, tanks, pumps, and more) and creates a component-first profile, table, chart, or grouped overview. |
 
-The loop is intentionally simple: capture writes structured Markdown under
-`.petry/vault/`; asset data retrieval reads the same observations and includes
-them in the next artifact. The vault stays on the user's computer inside the connected
-project.
+Capture writes structured Markdown under `.petry/vault/`; asset retrieval reads
+those observations into an artifact. A material capture or correction updates
+an existing artifact in the same conversation only if its actual insight
+dependencies change. The vault stays inside the connected local project.
+There is no watcher or automatic synchronization between sessions.
 
 ## Install
 
@@ -45,24 +46,56 @@ skill or an alias. Well-production requests remain supported. Existing vault
 files need no migration. `/capture` creates `.petry/vault/` on the first approved
 write if it is absent and reuses it thereafter.
 
-## Vault format
+## Vault format and temporal history
 
-New observations live at `<connected-project>/.petry/vault/`. petry also reads
-legacy `.petry/insights/` files. An asset file remains ordinary Markdown:
+New observations live at `<connected-project>/.petry/vault/`. Each asset file
+keeps its exact `petry:asset` header and readable observations. Version 2 stores
+a fenced JSON record after a `petry:observation schema="2"` marker. Both skills
+contain the complete format example. Existing inline `petry:obs` rows, including
+legacy `.petry/insights/`, remain readable without an automatic migration.
 
-```md
-# HOWARD 4N-28HZ
+The full Graphiti fact field set is retained:
 
-<!-- petry:asset ref="HOWARD 4N-28HZ" slug="howard-4n-28hz" -->
+- Identity and relationships: `uuid`, `group_id`, `source_node_uuid`,
+  `target_node_uuid`, `name`.
+- Content and provenance: `fact`, `fact_embedding`, `episodes`, `attributes`.
+- World time: `valid_at`, `invalid_at`.
+- Knowledge time: `created_at`, `expired_at`, plus source `reference_time`.
 
-## Observations
+Local `petry` metadata retains asset refs, observation type, source/capture time,
+date precision/timezone, point versus interval semantics, and predecessor UUIDs.
+Unknown graph fields may remain null in local staging; no graph service or
+embedding model is required. Supplied graph fields and unknown nested metadata
+are preserved. This preserves a Graphiti fact's fields; it does not create a
+Graphiti database or fabricate missing entity/episode records.
 
-- **[measurement]** 2026-06-10 — Rate back to 280 bbl/d. <!-- petry:obs type="measurement" valid_at="2026-06-10" captured_at="2026-08-29T19:30:00.000Z" source="session" -->
-```
+Date-only facts remain date-only. Intervals have an inclusive start and exclusive
+end; "August 5 through August 6" is `[2026-08-05, 2026-08-07)`. Corrections retain
+the prior version, expire it in knowledge time, and append a linked replacement.
+An insight ending in real life is not the same as an insight being superseded.
 
-`/capture` handles approval, collision-safe asset files, duplicate detection,
-and corrections. `/get-asset-data` reads this shape without editing it and
-surfaces the activity in the generated artifact.
+## When an artifact refreshes
+
+After a successful capture/update, Claude compares the old and new observation
+against accessible artifacts' recorded project, loaded assets, time coverage,
+insight types, displayed fields, and summary/evidence dependencies.
+
+| Change | Result |
+|---|---|
+| Relevant insight added/edited within the artifact's scope | Update that same artifact's affected insight views. |
+| Relevant old insight moved outside the scope or retracted | Remove its stale content; include replacement only if applicable. |
+| Insight belongs to an unrelated asset/project or an unrelated time window | No refresh. |
+| Duplicate capture, or only an unused embedding changed | No refresh. |
+| Artifact shows only telemetry and does not consume insights | No refresh. |
+| Changed asset is hidden by a filter but still selectable in the loaded artifact | Update its cached insight payload without changing the user's selection. |
+| Original artifact/update capability/dependencies are unavailable | Keep the saved insight and report that no refresh happened. |
+
+Only the affected artifact is updated; source telemetry and sharing settings do
+not change. Current and historical as-of views use separate knowledge/world-time
+filters. Self-contained artifacts do not watch the vault themselves.
+
+See [UPGRADE.md](UPGRADE.md) for exact field mapping and migration limitations.
+The old narrow `petry_map_insight` API is not a lossless full-record importer.
 
 ## Repository layout
 
@@ -72,6 +105,7 @@ skills/capture/SKILL.md         capture behavior and Markdown contract
 skills/get-asset-data/SKILL.md
                                 asset data retrieval and artifact contract
 test/release.test.mjs           package-shape and instruction invariants
+test/insight-contract.test.mjs  shared schema and temporal example checks
 UPGRADE.md                      mapping the local vault to petry's context graph
 ```
 

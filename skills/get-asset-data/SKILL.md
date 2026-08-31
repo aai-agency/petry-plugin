@@ -75,7 +75,7 @@ values describe the schema; they are not measurements to display:
     }
   ],
   "activity": [
-    { "type": "event", "date": "YYYY-MM-DD", "text": "exact captured observation" }
+    { "observation": "complete v2 record below", "date": null, "end_date": null }
   ],
   "provenance": "plain-language description of the source"
 }
@@ -165,25 +165,176 @@ Group requirements:
   active filter set; never display a stale unfiltered summary beside filtered
   metrics.
 
-## Read petry observations
+## Read petry observations — full fact metadata
 
-When a connected project exists, read `.petry/vault/*.md` and legacy
-`.petry/insights/*.md`. For one asset, select only files whose decoded
-`<!-- petry:asset ref="..." -->` exactly matches the requested asset. For a
-group, select the group record when present plus records whose exact asset refs
-belong to the resolved member set. Do not use fuzzy names to add an asset to a
-group.
+Read `.petry/vault/*.md` and legacy `.petry/insights/*.md` only from the connected
+project. Resolve exact asset refs, never fuzzy names. For groups include the
+explicit group record and resolved member refs; do not invent group membership.
+For v2, match each record's petry.asset_refs across files, not only the primary
+file header. A multi-asset assertion is stored once and deduplicated by
+project-scoped UUID in grouped views. Graph endpoints alone do not add an asset
+to the requested display scope. For legacy rows decode HTML entities in the
+asset header's ref before exact comparison.
+New records are a readable bullet followed by `<!-- petry:observation schema="2" -->`
+and a fenced JSON record. Parse top-level markers only, not marker text inside
+JSON strings or archived petry.legacy_origin evidence. The JSON is authoritative.
+Preserve the entire record
+in `activity[].observation`; never reduce it to `{type, date, text}`. Format example:
 
-Parse rows shaped like:
-
-```md
-- **[event]** 2026-06-10 — Well returned to production. <!-- petry:obs type="event" valid_at="2026-06-10" captured_at="..." source="session" -->
+```json
+{
+  "uuid": "ec87917b-8c24-4bfb-9af4-0da2f4b1e910",
+  "group_id": null,
+  "source_node_uuid": null,
+  "target_node_uuid": null,
+  "created_at": "2026-08-30T18:00:00Z",
+  "name": null,
+  "fact": "M-101 line pressure was 340 psig from August 5 through August 6.",
+  "fact_embedding": null,
+  "episodes": [],
+  "expired_at": null,
+  "valid_at": "2026-08-05",
+  "invalid_at": "2026-08-07",
+  "reference_time": "2026-08-30T18:00:00Z",
+  "attributes": {},
+  "petry": {
+    "schema_version": 2,
+    "asset_refs": [
+      "M-101"
+    ],
+    "type": "measurement",
+    "source": "session",
+    "captured_at": "2026-08-30T18:00:00Z",
+    "temporal_kind": "interval",
+    "time_precision": {
+      "valid_at": "date",
+      "invalid_at": "date"
+    },
+    "timezone": null,
+    "original_time_expression": "August 5 through August 6, 2026",
+    "supersedes": []
+  }
+}
 ```
 
-Map each row to `{ asset_id, asset_name, type, date, text, source }`, using
-`valid_at` as `date` and omitting the date when it is empty. Existing optional
-`hash` attributes do not affect rendering. Do not edit the vault while
-producing an asset artifact.
+These are all inherited Graphiti Edge/EntityEdge fields: uuid, group_id,
+source_node_uuid, target_node_uuid, created_at, name, fact, fact_embedding,
+episodes, expired_at, valid_at, invalid_at, reference_time, attributes. `petry`
+is the local extension with exact asset refs, type, source/capture provenance,
+precision/timezone, temporal kind, and revision links. Preserve unknown fields,
+nested attributes, supplied embeddings and entity/episode payloads losslessly in
+the normalized model. Do not require graph IDs, relation names, or embeddings to
+render a local insight; null means unresolved, not permission to invent one.
+Keep graph partition `group_id` distinct from the artifact's asset grouping.
+
+Also parse legacy rows:
+
+```md
+- **[event]** 2026-06-10 — Well returned to production. <!-- petry:obs type="event" valid_at="2026-06-10" captured_at="2026-08-29T19:30:00Z" source="session" -->
+```
+
+Map the visible sentence to fact and the exact header ref to petry.asset_refs;
+retain type, source, captured_at, optional hash and all extra metadata. Preserve
+existing temporal fields, never infer an end/expiry. A valid_at-only legacy date
+is a date-precision point unless source context explicitly establishes an
+interval. Use trustworthy captured_at for missing created_at; otherwise leave
+knowledge time unknown. Missing graph fields stay null and lists/objects may
+normalize to []/{} in memory. An expired v2 snapshot's petry.legacy_origin retains
+the replaced legacy row as evidence; never parse that archived string as another
+active observation. A preserved legacy row already represented by a v2 revision
+chain is historical evidence, not another active row. Reading or
+refreshing must never migrate or edit the vault.
+
+Keep the two temporal axes separate:
+
+- World time: valid_at starts a fact; invalid_at is its exclusive real-world end.
+  Show `temporal_kind=point` as a marker, an interval as a range, and undated
+  context as undated. An open-ended interval is not the same as a point. A point
+  has no invalid_at, and an interval needs at least one known boundary; entirely
+  unknown time belongs in undated context. Validate real dates and timestamps.
+- Knowledge time: created_at records this version; expired_at records when it
+  was superseded/retracted. Current knowledge uses unexpired versions, including
+  facts with historical invalid_at. An explicit as-of T selects versions with
+  created_at <= T < expired_at (null expiry is open), then separately filters
+  world time. Unknown created_at prevents exact historical membership.
+- Preserve ISO timestamp precision and offsets/UTC instants. Date-only values
+  stay dates with their precision; do not silently assign midnight or a timezone.
+  Calendar ranges use [start,end), so "Aug 5 through Aug 6" ends Aug 7. Date-only
+  points overlap their calendar day. An interval overlaps [from,to) iff start < to
+  and end > from; null interval bounds are open. Do not filter ranges by start
+  date alone. Invalid/reversed ranges must be reported, not silently drawn.
+- Do not replace unknown valid_at with captured_at or use expired_at as a chart
+  interval end. Undated facts appear only when the requested insight context
+  includes them. Explain ambiguous hourly/date-only comparisons.
+- Derive display `date`/`end_date` from world time only and retain original bounds
+  and provenance in detail dialogs. If the library supports only point markers,
+  keep EventTimeline with exact bounds in details and add a labeled range overlay
+  or interval list as a narrow fallback. Never collapse a known duration to one
+  point or fabricate supported component props. Do not plot expired versions as
+  current facts; explicit audit views label the revision chain.
+
+## Artifact dependencies and applicable refresh
+
+Embed a `petry_dependencies` manifest in the generated source/model, alongside
+the normalized data. This is inert metadata, not a polling implementation:
+
+```json
+{
+  "schema_version": 1,
+  "artifact_id": "native artifact identity once available",
+  "project_identity": "exact connected-project identity",
+  "consumes_insights": true,
+  "loaded_asset_refs": ["M-101"],
+  "loaded_world_window": { "from": "2026-08-01", "to": "2026-08-15", "precision": "date", "timezone": null },
+  "includes_undated": true,
+  "observation_types": ["measurement", "event", "correction"],
+  "knowledge_view": { "mode": "current", "as_of": null },
+  "observation_uuids": ["ec87917b-8c24-4bfb-9af4-0da2f4b1e910"],
+  "insight_fields_used": ["fact", "valid_at", "invalid_at", "petry.type", "petry.source", "attributes"],
+  "derived_dependencies": [],
+  "active_filters": {},
+  "source_snapshot": "identity/version of the actual loaded source"
+}
+```
+
+Fill this from the actual artifact, not the example. Record the full loaded and
+selectable asset/member scope and time coverage, every displayed insight field
+(including detail dialogs), and dependency refs for generated summaries/KPIs.
+Track loaded version UUIDs and project-scoped legacy row identities when needed.
+If no project is connected use null project_identity; do not pretend an uploaded
+CSV is linked to a writable vault. Set consumes_insights=false for an artifact
+whose contents do not use insights. Update exposed filter/selection state in the
+artifact's model as the user changes it; do not write a registry into the vault
+or use browser storage. Record native artifact identity when the surface provides
+it; never guess it or a local project path.
+
+After `/capture` saves an observation, refresh only accessible artifacts in the
+same conversation/project whose renderable insight payload or explicit derived
+dependencies change. Compare BEFORE and AFTER versions, including old and new
+asset refs, world-time ranges, expiry and revision links. A moved/expired insight
+may require removing old content even if its replacement no longer matches.
+A new insight may enter the scope even though its UUID was never loaded.
+
+Use the full loaded/selectable scope, not only current visible filters, so a
+hidden selectable asset does not retain stale data. A truly unrelated asset,
+non-overlapping window with no summary/context dependency, ignored metadata,
+telemetry-only view, or duplicate/no-op does not refresh. An as-of view only
+changes if its selected historical projection changes. Unknown dates can affect
+an undated context panel but never acquire invented chart dates. Project/manifest
+uncertainty is not permission to rebuild everything: report unable to determine
+applicability if the original source/request cannot establish the dependencies.
+
+For an applicable change, reread saved observations, update the same artifact,
+and preserve filters, selection, zoom and access settings when available.
+Honor the artifact's data authorization; get approval for any new destination,
+sensitive-data transmission or expanded permission before crossing that boundary. Rebuild
+the affected timeline, interval annotations, details and evidence-linked summary
+together; do not alter raw telemetry just because a note changed. Validate the
+changed view and an unaffected view. If update capability, original source, or
+state is unavailable, report that capture was saved but refresh did not happen.
+Do not claim live synchronization, create a duplicate artifact, or refresh other
+sessions. This runs during an agent interaction; no watcher, server, hidden
+network request, or background refresh is introduced.
 
 ## Build and show the result
 
@@ -209,8 +360,9 @@ Use the library component that owns the interaction:
   and water panels, or other compatible metric panels.
 - Asset history: `EventTimeline` from
   `@aai-agency/og-components/event-timeline`. Map dated petry observations to
-  `WellEvent` records and preserve their original petry type and source in
-  `meta`. Retain the actual asset type even if the library type is named
+  `WellEvent` records and preserve the complete observation (including both
+  temporal axes, UUID, source and interval bounds) in `meta`. Retain the actual
+  asset type even if the library type is named
   `WellEvent`. Clicking a row or marker must open the component's built-in accessible
   event detail dialog.
 - Detailed event extensions: use `EventDetailDialog`, `EventActivityLog`, or
@@ -360,4 +512,5 @@ and styling instructions.
 ## Related
 
 Use `/capture` when the user wants to log an asserted asset observation. That
-skill writes the Markdown shape this skill reads back into future profiles.
+skill writes the full Markdown record this skill reads and refreshes only
+applicable existing artifacts after a successful material change.
