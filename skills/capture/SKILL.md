@@ -534,6 +534,15 @@ boundary; local capture alone does not grant external access.
    IDs; refresh affected timeline rows, point/range annotations, detail dialogs,
    and summaries/evidence together. Keep unchanged raw source readings unchanged;
    an insight is not permission to overwrite telemetry. Preserve access settings.
+   Preserve complete observation metadata only in the artifact's private model.
+   Keep its visible event objects presentation-safe: show a friendly calendar
+   date under a **Date** label by default, use plain-language field and source
+   labels, and never expose timestamps, UUIDs, schema/version fields, graph fields,
+   source mappings, connector/resource IDs, hashes, storage paths, or raw JSON.
+   If the component renders arbitrary `meta` entries, use an explicit friendly
+   allowlist or leave `meta` empty. Show a time of day only when the user asks for
+   it or it is necessary to answer the request. Two events on one day remain two
+   distinct records even when their hidden timestamps determine ordering.
 6. Validate the affected view and one unaffected view. If dependency/selection
    state, the original model, or update capability is unavailable, keep the vault
    save and say the artifact was not refreshed (and why). Never claim a refresh

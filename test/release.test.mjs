@@ -5,11 +5,11 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.6.0 with a lowercase plugin name", () => {
+test("release metadata is aligned at 0.6.1 with a lowercase plugin name", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
   const marketplace = readJson(".claude-plugin/marketplace.json");
-  assert.equal(root.version, "0.6.0");
+  assert.equal(root.version, "0.6.1");
   assert.equal(plugin.version, root.version);
   assert.equal(plugin.name, "petry");
   assert.equal(marketplace.plugins[0].name, "petry");
@@ -70,6 +70,17 @@ test("asset data defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /link every `TimeSeries` and `WellEvent` with `assetId`/i);
   assert.match(skill, /mode: "dimension"/);
   assert.match(skill, /built-in accessible\s+event detail dialog/i);
+  assert.match(skill, /Keep storage details out of the interface/i);
+  assert.match(skill, /Label event time as \*\*Date\*\*/i);
+  assert.match(skill, /friendly calendar date/i);
+  assert.match(skill, /WellEvent\.meta.*visible/i);
+  assert.match(skill, /separate private lookup/i);
+  assert.match(skill, /Never expose schema\/version language/i);
+  assert.match(skill, /Show a time of day only when the user explicitly requests it/i);
+  assert.doesNotMatch(
+    skill,
+    /preserve the complete observation[\s\S]{0,160}in `meta`/i,
+  );
   assert.match(skill, /Generate custom UI only when/i);
   assert.match(skill, /does not export an\s+asset data table/i);
   assert.match(skill, /area, field, pad, basin, subsystem/i);
@@ -82,6 +93,14 @@ test("asset data defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /No sample, mock, demo, or synthetic-data banner unless the user explicitly/i);
   assert.match(skill, /every petry product or brand label exactly as lowercase `petry`/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
+});
+
+test("capture refreshes keep technical observation fields out of visible artifacts", () => {
+  const skill = readSkill("capture");
+  assert.match(skill, /visible event objects presentation-safe/i);
+  assert.match(skill, /friendly calendar\s+date under a \*\*Date\*\* label/i);
+  assert.match(skill, /never expose timestamps, UUIDs, schema\/version fields/i);
+  assert.match(skill, /Two events on one day remain two\s+distinct records/i);
 });
 
 test("the petry brand is lowercase in shipped text", () => {
