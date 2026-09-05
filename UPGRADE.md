@@ -99,7 +99,8 @@ without it, and the vault remains the source of truth.
 
 ## Local source and asset identities (0.6.0)
 
-`.petry/sources.json` and `.petry/assets/<id>.json` use schema_version 1.
+`.petry/sources.json` and `.petry/assets/<id>.json` now use schema_version 2.
+Readers also support schema_version 1 and mixed-version projects.
 They are optional: existing vault-only projects continue working without a
 migration. Source IDs and local asset IDs are project-scoped UUIDs, and a
 registered asset's `asset:<id>` ref is immutable across renames. Explicit
@@ -114,3 +115,22 @@ local asset UUID merely because both look like UUIDs. Connector/resource IDs
 and project-relative paths may need explicit destination remapping; local
 credentials are neither present nor transferable. This release does not
 implement that team importer or claim shared-service compatibility.
+
+
+### Multiple sources per asset
+
+Version 2 adds datasets on sources and bindings, with stable semantic key,
+metric selections, and source granularity, plus asset source_preferences scoped
+to (dataset, metric, granularity). Broad capability labels are no longer exclusive.
+Local asset identities and source-specific IDs keep their original meaning.
+
+Missing datasets on a legacy entry means coarse/unknown scope, never a wildcard
+or a fabricated production mapping. Missing preferences means no preferred
+source. Readers resolve legacy mappings in memory without file writes. An
+explicit setup/edit upgrades only affected files, preserving untouched legacy
+entries and all unknown fields. A registry may therefore contain configured v2
+entries beside untouched coarse entries. Observe or explicitly establish dataset
+semantics and grain before adding those fields. Old clients should not write v2
+files; use all three updated skills. Observation schema 2 is independent and
+unchanged. A future team transfer must retain dataset selections, preferences,
+and per-series provenance in addition to asset identities and fact history.

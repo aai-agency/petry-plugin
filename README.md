@@ -99,8 +99,29 @@ stays in the host. A remembered connector must still be available and authorized
 in the current session. Missing connections retain their configuration and show
 what needs repairing; they do not silently fall back to another system.
 
-Each capability (such as telemetry or maintenance) has one source owner per
-asset. Same-named assets in different systems stay separate unless you explicitly
+One asset can have production in one system and real-time data in another.
+Bindings select datasets, metrics, and source time granularity; broad labels
+such as telemetry can appear on several bindings. For example:
+
+| Dataset / metric | Source grain | Source |
+|---|---|---|
+| Production / oil volume | Daily | Production accounting |
+| Operations / pressure | One minute | Real-time system |
+| Maintenance / events | Event-driven | Maintenance system |
+
+If two systems supply the same dataset, metric, and grain, explicitly choose a
+preferred source for that scope—or request a comparison. Claude does not choose
+by file order, silently replace a failed preferred source, or add competing
+readings together. A combined view retains each source's identity, timestamp,
+units, and coverage. Real-time data is fetched on request, without a background
+stream. Say “Use Accounting for daily production oil volume and SCADA for minute
+pressure for this asset; remember both.” Different IDs in each system are saved
+against the same local asset after the mapping is established.
+
+New configuration uses schema version 2. Existing version 1 bindings remain
+readable, and reads never rewrite them. Unknown legacy datasets/granularities
+are resolved from actual data or clarified when they conflict with another source.
+ Same-named assets in different systems stay separate unless you explicitly
 link them. Local edits do not change external source data. Archived assets are
 excluded from default lists while remaining available for historical requests.
 Asset changes appear on the next data request; existing artifacts remain snapshots.

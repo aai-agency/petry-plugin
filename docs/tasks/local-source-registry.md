@@ -106,3 +106,62 @@ untracked build files were preserved. Candidate release 0.6.0 is not installed
 or merged. CI runs the same 17 checks on Ubuntu and Windows; current status is
 visible on the PR. Native tests used macOS Cowork with explicitly loaded
 candidate files, not a claim of installed-skill discovery.
+
+
+## Follow-up: multiple sources for the same broad capability
+
+User feedback: production in one system and real-time data in another must
+coexist on one asset. The first capability-exclusive implementation was too
+coarse. Replace that rule within PR #13; retain duplicate source-identity checks.
+
+- [x] Define schema 2 dataset/metric/granularity selections and scoped preferences.
+- [x] Integrate routing, partial-source failure, comparison, and per-series provenance.
+- [x] Keep schema 1 readable without an automatic migration.
+- [x] Validate production + real-time + overlapping production source in native use.
+- [ ] Update PR and verify final Ubuntu/Windows checks.
+
+Previous evidence above describes the initial single-binding candidate. Additional
+multi-source evidence below will state which revised behavior was exercised.
+
+
+### Multi-source native evidence
+
+Synthetic fixture: `/Users/husamrahman/Documents/petry-multisource-acceptance-20260905`.
+Only that folder is connected. Evidence is in the sibling `-evidence` folder.
+All three candidate skill files match the revised repository instructions.
+
+Setup session: https://claude.ai/cowork/cse_011SVZGTRnuxEagsLRQLgiUh
+
+Created well W-42 (`c7315c93-d23d-4c91-94c5-35c34a53ada4`) with three telemetry
+bindings: Accounting/WELL-1042 and Alternate/ALT-22 supply production/oil_volume
+at P1D; SCADA/RT-883 supplies operations/pressure at PT1M. Saved one exact
+production/oil_volume/P1D preference for Accounting, retaining all bindings.
+
+Independent disk validation caught an initial invented metric kind `total`.
+The shared contract now enumerates the allowed kinds and explicitly uses
+`interval_total` for daily production volumes. Added explicit time_role and
+source-defined interval_duration metadata to preserve calendar label semantics.
+The candidate was reread and the test configuration corrected through native
+management; the disk oracle then passed for all bindings, metrics and preference.
+This was a targeted correction, not an unassisted first-pass success.
+
+The independent `check.py` snapshots JSON/hashes and asserts schema versions,
+three binding scopes, external IDs, metric kinds and exact preference target.
+
+Fresh retrieval session:
+https://claude.ai/cowork/cse_01XMRdyWNH8iVy2H7hEJ8hfm
+
+Without receiving any source paths or external IDs in its request, Claude loaded
+the saved bindings and chose Accounting for production/oil_volume/P1D and SCADA
+for operations/pressure/PT1M. It returned Accounting's two rows and 220 bbl
+total, plus the two SCADA points and latest 305 psig at 14:01 UTC. It kept the
+Alternate source separate for a requested comparison.
+
+The first comparison response displayed Alternate rows 105 and 125 but stated
+250 bbl. This arithmetic failure prompted a retrieval rule requiring actual
+calculation over selected source rows and reconciliation against every displayed
+aggregate. After rereading the candidate skill, Claude computed 220 bbl for
+Accounting and 230 bbl for Alternate, each from two rows, without creating a
+cross-source total. Independent hashes show no data, registry, or asset file
+changed during either read; only the deliberately updated candidate instruction
+file differed between snapshots.
