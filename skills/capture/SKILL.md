@@ -17,6 +17,15 @@ petry is an instruction-only skill. Use Claude's connected-folder tools to read
 and write the user's project directly. Do not look for, execute, copy, or create
 plugin helper programs.
 
+Local capture does not require a petry account, paid subscription, database, or
+MCP connection. Never block a local write on setting up the optional team
+service. A connected MCP does not automatically change this skill's local
+destination or authorize uploading the vault. If the user explicitly requests
+a shared/team write, inspect the selected service's actual workspace, permission,
+and record capabilities before writing there. Do not claim team visibility
+from a local save, silently dual-write, or substitute local success for a failed
+shared write. Preserve local records and report unsupported shared capabilities.
+
 ## Decide whether there is an observation
 
 Capture only a concrete assertion about a named asset:
@@ -53,6 +62,13 @@ observation is written. Also read legacy observations from
 
 Never write outside the connected project. Never create a similarly named path
 in a cloud or temporary filesystem.
+
+Persist only approved observation records and explicitly requested artifact
+copies in the connected project. Keep UUIDs, before/after payloads, and write
+results in memory/tool output; do not create scratch files, `_last_write.json`,
+helper programs, or cleanup folders under `.petry`. If an accidental file is
+created, report it and use only already-authorized, reversible cleanup; do not
+request broad permanent-delete access just to finish a note capture.
 
 ## Find or create the asset file
 
@@ -287,6 +303,10 @@ boundary; local capture alone does not grant external access.
    filter: hidden but selectable records must not remain stale when selected
    later. Preserve the user's active filters, selection, and zoom when exposed;
    do not broaden the requested scope. Do not change unaffected artifacts.
+   A saved/default filter is not proof of the live selection. If the host cannot
+   expose current state, do not claim it was preserved. A user-specified saved
+   view is a valid refresh target; otherwise follow the unavailable-state rule
+   below. Never invent a host persistence API or add hidden browser storage.
 5. For applicable artifacts, reread the saved current observations and update
    the SAME artifact using native artifact capabilities. Replace stale version
    IDs; refresh affected timeline rows, point/range annotations, detail dialogs,

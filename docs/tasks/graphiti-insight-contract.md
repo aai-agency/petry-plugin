@@ -73,3 +73,18 @@ demo or these static checks as that verification.
 - Local check now passes 11/11; plugin validation and whitespace check pass.
 - Pending: green cross-platform CI, merge, installed-version verification, and
   disposable-project native capture/refresh evidence.
+
+## Reconciled September 5, 2026
+
+The pending list above was not updated after the August 30 follow-up. Git history
+confirms PR #11 merged at e8140c1. The later vault session record
+`petry-native-capture-tests-2026-08-30-200328` records successful native range
+capture, unrelated capture, duplicate no-op, and out-of-window correction with
+the same artifact identity and preserved local history. The installed Cowork
+plugin was independently observed enabled at 0.5.0 on September 5.
+
+The August run found final-hour telemetry omission and an unsubstantiated
+component fallback. These remain separate from the passing capture scenarios.
+See [local-acceptance.md](local-acceptance.md) for the new run, fixes, and current
+verification boundaries. No shared database/team MCP write is established by
+either local acceptance run.

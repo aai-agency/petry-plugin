@@ -106,3 +106,16 @@ test("instruction safety and migration boundaries cannot silently regress", () =
   assert.match(read("UPGRADE.md"), /Do not silently drop fields/);
   assert.doesNotMatch(read("UPGRADE.md"), /import can be safely retried/);
 });
+
+// These guard instruction presence, not executed host/model behavior. Native
+// acceptance evidence lives in docs/tasks/local-acceptance.md.
+test("local acceptance safeguards remain explicit in both workflows", () => {
+  assert.match(capture, /Never block a local write/);
+  assert.match(capture, /substitute local success for a failed\nshared write/);
+  assert.match(retrieval, /Local file retrieval needs no petry account/);
+  assert.match(retrieval, /Do not filter interval-end labels as/);
+  assert.match(retrieval, /August 14 23:00–August 15 00:00/);
+  assert.match(retrieval, /attempt package resolution and a\nminimal bundle/);
+  assert.match(retrieval, /immediately remove stale\ninterpretations/);
+  assert.match(retrieval, /Omit an unavailable modification time/);
+});
