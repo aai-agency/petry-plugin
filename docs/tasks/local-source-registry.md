@@ -118,7 +118,7 @@ coarse. Replace that rule within PR #13; retain duplicate source-identity checks
 - [x] Integrate routing, partial-source failure, comparison, and per-series provenance.
 - [x] Keep schema 1 readable without an automatic migration.
 - [x] Validate production + real-time + overlapping production source in native use.
-- [ ] Update PR and verify final Ubuntu/Windows checks.
+- [x] Update PR and verify final Ubuntu/Windows checks.
 
 Previous evidence above describes the initial single-binding candidate. Additional
 multi-source evidence below will state which revised behavior was exercised.
@@ -165,3 +165,7 @@ Accounting and 230 bbl for Alternate, each from two rows, without creating a
 cross-source total. Independent hashes show no data, registry, or asset file
 changed during either read; only the deliberately updated candidate instruction
 file differed between snapshots.
+
+Multi-source implementation commit `ec2c4a7` passed 18 repository checks on
+Ubuntu and Windows in GitHub Actions run 33974871758. PR #13's description was
+updated with the schema 2 behavior and native evidence.
