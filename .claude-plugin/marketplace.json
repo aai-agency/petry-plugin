@@ -10,7 +10,7 @@
     {
       "name": "petry",
       "source": "./",
-      "description": "Instruction-only skills that turn connected asset data into component-first artifacts and capture field observations in a local Markdown vault."
+      "description": "Instruction-only skills for persistent local assets, remembered data sources, component-first artifacts, and field observations in a local Markdown vault."
     }
   ]
 }
