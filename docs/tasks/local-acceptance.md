@@ -17,7 +17,7 @@ claim a deployed paid service, team authorization, or lossless importer.
       and saved-view preservation with artifact and local-file evidence.
 - [x] Verify disk persistence in a fresh read-only conversation.
 - [x] Address confirmed instruction gaps and clarify local/paid boundary.
-- [ ] Validate changes and deliver a pull request with evidence and limitations.
+- [x] Validate changes and deliver a pull request with evidence and limitations.
 
 ## Recovered evidence
 
@@ -158,3 +158,11 @@ standalone HTML/model remain in `Documents/petry-local-acceptance-20260905`.
   substitute for native behavior evidence.
 
 Repeatable steps and numerical oracle: [local-acceptance-protocol.md](local-acceptance-protocol.md).
+
+## Delivery
+
+PR: https://github.com/aai-agency/petry-plugin/pull/12
+
+Branch: `fix/local-acceptance`. Local validation: 12/12 checks, plugin manifest
+validation, and `git diff --check` pass. Cross-platform results are available on
+the PR. Not merged or installed; the existing Cowork installation remains 0.5.0.
