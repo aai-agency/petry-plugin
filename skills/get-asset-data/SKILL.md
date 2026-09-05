@@ -571,7 +571,7 @@ Keep the two temporal axes separate:
   interval end. Undated facts appear only when the requested insight context
   includes them. Explain ambiguous hourly/date-only comparisons.
 - Derive display `date`/`end_date` from world time only and retain original bounds
-  and provenance in detail dialogs. If the library supports only point markers,
+  and provenance in the artifact's private data model. If the library supports only point markers,
   keep EventTimeline with exact bounds in details and add a labeled range overlay
   or interval list as a narrow fallback. Never collapse a known duration to one
   point or fabricate supported component props. Do not plot expired versions as
@@ -680,6 +680,46 @@ boundary. Do not coerce an unsupported asset type or metric into well/oil data
 to satisfy a component. If that input is unsupported, use the applicable library
 primitive or the narrowly scoped fallback described below.
 
+### Keep storage details out of the interface
+
+The people using this artifact are operations and business users. Treat the
+normalized model, source registry, observation records, dependency manifest,
+and component props as implementation data. Never render their raw field names
+or values in the artifact, including dialogs, tooltips, tables, labels, badges,
+summaries, accessibility text, copy/export content, empty states, or errors.
+
+- Label event time as **Date**. Show a friendly calendar date such as
+  `Sep 5, 2026` by default, even when the stored event has an exact timestamp.
+  For a range, show friendly start and end dates under the same Date label.
+  Show a time of day only when the user explicitly requests it or the time is
+  necessary to answer the request. Never label a field `Date/time`, `Timestamp`,
+  `valid_at`, `invalid_at`, `created_at`, `captured_at`, or `reference_time`.
+- Preserve exact timestamps, offsets, interval boundaries, and ordering in the
+  private model. Date-only presentation must not truncate the stored record,
+  change filtering, merge two same-day events, or make a refresh ambiguous.
+- Use plain labels such as **Event**, **Date**, **Type**, **Asset**, **Status**,
+  and **Source**. A visible source is a human-recognizable name such as
+  `Operator note` or `Production system`, never a connector ID, resource ID,
+  database/table identifier, file path, hash, UUID, or source mapping key.
+- Never expose schema/version language, JSON, graph terminology, internal IDs,
+  dependency data, field mappings, precision flags, revision links, or storage
+  paths in the interface. Convert useful domain keys to readable labels; omit
+  values that only exist for persistence, provenance, deduplication, or refresh.
+- Keep raw observations in a separate lookup keyed by the event's internal ID.
+  Do not pass a complete observation to a component prop that renders arbitrary
+  metadata. Build a presentation-safe event object explicitly, using only the
+  friendly title, description, type, date/range, asset name, and approved source
+  label. In particular, `WellEvent.meta` is visible in the library detail dialog:
+  populate it from an explicit presentation allowlist or leave it empty.
+- Pass `EventTimeline.formatDate` (and the same formatter to a standalone
+  `EventDetailDialog`) so rows, markers, tooltips, and dialogs consistently show
+  calendar dates. Format with the source/project timezone when known and keep
+  date-only values on their stated calendar date; never let browser timezone
+  conversion shift the displayed day.
+- If diagnostic detail is needed to repair bad data, explain the problem in
+  normal language outside the artifact. Do not turn the production interface
+  into a schema or database inspector.
+
 Use the library component that owns the interaction:
 
 - Asset measurement history: `Chart` or `ChartGroup` from
@@ -687,9 +727,10 @@ Use the library component that owns the interaction:
   and water panels, or other compatible metric panels.
 - Asset history: `EventTimeline` from
   `@aai-agency/og-components/event-timeline`. Map dated petry observations to
-  `WellEvent` records and preserve the complete observation (including both
-  temporal axes, UUID, source and interval bounds) in `meta`. Retain the actual
-  asset type even if the library type is named
+  presentation-safe `WellEvent` records. Keep the complete observation,
+  including both temporal axes, UUID, source, and interval bounds, in the
+  separate private lookup described above because `WellEvent.meta` is rendered
+  in its detail dialog. Retain the actual asset type even if the library type is named
   `WellEvent`. Clicking a row or marker must open the component's built-in accessible
   event detail dialog.
 - Detailed event extensions: use `EventDetailDialog`, `EventActivityLog`, or

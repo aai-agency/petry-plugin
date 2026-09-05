@@ -210,6 +210,13 @@ clickable and traceable to their contributing assets and source events. The
 package is a generation-time dependency in the artifact workspace, not a petry
 plugin runtime dependency.
 
+Artifacts are written for operations and business users. Event views show a
+friendly calendar **Date** by default and use familiar labels such as Event,
+Type, Asset, Status, and Source. Exact timestamps and internal observation data
+remain available privately for filtering and refresh, but UUIDs, schema fields,
+graph fields, connector/resource IDs, hashes, storage paths, and raw JSON do not
+appear in the interface. Two events on the same date remain separate events.
+
 Filter changes recompute factual summaries from loaded data locally. AI
 interpretations appear only for the exact scope and data revision they were
 generated for; a new scope can request a fresh interpretation through Claude.
