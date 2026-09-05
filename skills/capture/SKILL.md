@@ -17,6 +17,19 @@ petry is an instruction-only skill. Use Claude's connected-folder tools to read
 and write the user's project directly. Do not look for, execute, copy, or create
 plugin helper programs.
 
+## Non-negotiable input fidelity
+
+Apply these rules before every other classification or storage rule:
+
+1. If the user labels the observation with a valid type, store that exact type.
+   An explicitly requested pressure event is an `event`, not a `measurement`.
+2. If the user marks a sentence as exact or verbatim, identify its complete
+   boundaries before writing and copy every character into `fact`, including the
+   final punctuation. Do not reconstruct it from the parsed dates or display text.
+3. After writing, reread the serialized record and compare the stored type and
+   exact fact with the request. A mismatch is a failed write that must be fixed
+   before artifact refresh or a success report.
+
 Local capture does not require a petry account, paid subscription, database, or
 MCP connection. Never block a local write on setting up the optional team
 service. A connected MCP does not automatically change this skill's local
@@ -326,6 +339,14 @@ report that the template could not be reloaded rather than switching templates.
 
 Capture only a concrete assertion about a named asset:
 
+If the user explicitly names one of the valid observation types for the
+assertion—such as "capture this event" or "save this as a decision"—preserve
+that requested type. Do not silently recategorize it from keywords in the fact;
+for example, an explicitly named pressure event remains an `event`, even though
+pressure can also appear in a `measurement`. Use the guidance below only when
+the user did not supply a type. Clarify only when the requested type is invalid
+or conflicts with an explicitly requested correction/retraction workflow.
+
 - `measurement`: rate, pressure, GOR, water cut, test result, or another value.
 - `event`: failure, shut-in, workover, restart, choke change, or dated occurrence.
 - `decision`: defer, sell, recomplete, change lift, or another chosen action.
@@ -431,6 +452,15 @@ note content. Parse only top-level markers/fences, never marker-looking text
 inside JSON strings or archived source text. Escape Markdown in the display
 bullet without changing the authoritative fact. The following is a format
 example, not a fact to capture:
+
+When the user says to capture an **exact** sentence, quote, or fact, copy that
+sentence verbatim into the authoritative `fact`, including names, numbers,
+units, dates, qualifiers, capitalization, and punctuation. JSON escaping is not
+a content change. Do not shorten, paraphrase, normalize, or remove a date merely
+because the same information also appears in structured fields. Reread the
+serialized record and compare `fact` to the user's exact sentence before
+reporting success. The display bullet may format the date separately, but it
+must not become the authoritative fact.
 
 - **[measurement]** 2026-08-05 through 2026-08-06 — M-101 line pressure was 340 psig.
 

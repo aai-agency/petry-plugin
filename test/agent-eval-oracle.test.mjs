@@ -34,6 +34,18 @@ test("agent eval oracle accepts a normalized render projection", () => {
   assertRelevant(base, { ...structuredClone(base), revision: 2, activity: [projection] }, [record]);
 });
 
+test("agent eval oracle accepts a manifest-named dotted field projection", () => {
+  const projection = {
+    uuid: record.uuid,
+    "petry.type": record.petry.type,
+    fact: record.fact,
+    valid_at: record.valid_at,
+    invalid_at: record.invalid_at,
+    expired_at: null,
+  };
+  assertRelevant(base, { ...structuredClone(base), revision: 2, activity: [projection] }, [record]);
+});
+
 test("agent eval oracle rejects a projection missing a consumed field", () => {
   const projection = {
     uuid: record.uuid,

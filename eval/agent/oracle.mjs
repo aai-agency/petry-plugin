@@ -73,7 +73,10 @@ export function assertRelevant(before, after, records) {
   assert.equal(rendered.fact, records[0].fact);
   assert.equal(rendered.valid_at, records[0].valid_at);
   assert.equal(rendered.invalid_at, records[0].invalid_at);
-  assert.equal(rendered.petry?.type ?? rendered.type, records[0].petry.type);
+  assert.equal(
+    rendered.petry?.type ?? rendered["petry.type"] ?? rendered.type,
+    records[0].petry.type,
+  );
   if ("expired_at" in rendered) assert.equal(rendered.expired_at, null);
 }
 

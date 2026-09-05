@@ -92,7 +92,7 @@ const sourceHash = (await snapshot(root))["data/readings.csv"];
 try {
   const beforeRelevant = await readArtifact(root);
   await runClaude(
-    "Use petry:capture. Capture this exact event: M-101 line pressure was constrained from August 5 through August 6, 2026. This explicit request authorizes the local write and applicable artifact refresh.",
+    'Use petry:capture. Capture an observation with type `event`. The exact fact, including its final punctuation, is: "M-101 line pressure was constrained from August 5 through August 6, 2026." This explicit request authorizes the local write and applicable artifact refresh.',
     true,
   );
   let records = await observations(root);
@@ -109,7 +109,7 @@ try {
   const beforeUnrelatedArtifactBytes = await readFile(artifactPath(root));
   const beforeUnrelated = await snapshot(root);
   await runClaude(
-    "Use petry:capture. Capture this exact assertion: M-202 calibration completed on August 9, 2026. This explicitly authorizes the local write.",
+    'Use petry:capture. Capture an observation with type `event`. The exact fact, including its final punctuation, is: "M-202 calibration completed on August 9, 2026." This explicitly authorizes the local write.',
   );
   assert.deepEqual(await readFile(artifactPath(root)), beforeUnrelatedArtifactBytes);
   const afterUnrelated = await snapshot(root);
@@ -124,14 +124,14 @@ try {
 
   const beforeDuplicate = await snapshot(root);
   await runClaude(
-    "Use petry:capture. Capture this exact event again: M-101 line pressure was constrained from August 5 through August 6, 2026.",
+    'Use petry:capture. Capture an observation with type `event` again. The exact fact, including its final punctuation, is: "M-101 line pressure was constrained from August 5 through August 6, 2026."',
   );
   assert.deepEqual(await snapshot(root), beforeDuplicate, "duplicate changed project bytes");
 
   const beforeCorrection = await readArtifact(root);
   const beforeCorrectionFiles = await snapshot(root);
   await runClaude(
-    `Use petry:capture. Correct event ${predecessorUuid} so its exact fact is: M-101 line pressure was constrained from August 20 through August 21, 2026. This identifies the exact observation and correction and authorizes both the local revision and applicable artifact refresh.`,
+    `Use petry:capture. Correct event ${predecessorUuid}, preserving type \`event\`. The exact replacement fact, including its final punctuation, is: "M-101 line pressure was constrained from August 20 through August 21, 2026." This identifies the exact observation and correction and authorizes both the local revision and applicable artifact refresh.`,
   );
   records = await observations(root);
   assertCorrection(beforeCorrection, await readArtifact(root), records, predecessor);
