@@ -359,7 +359,9 @@ asset again. For a registered asset, every new `petry.asset_refs` value must be
 its canonical `asset:<id>`; include a display-name ref only when that exact value
 is explicitly assigned in legacy_refs. Treat a name-only ref for a registered
 asset as a failed write validation and correct it before reporting success or
-refreshing an artifact.
+refreshing an artifact. The destination file must also use the canonical
+`petry:asset` header and immutable asset-ID filename; never place a registered
+asset's new active record under a display-name header/file.
 
 Persist only approved observation records and explicitly requested artifact
 copies in the connected project. Keep UUIDs, before/after payloads, and write

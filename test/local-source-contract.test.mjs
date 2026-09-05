@@ -82,6 +82,8 @@ test("registered assets use canonical refs in vault and artifact dependencies", 
   assert.match(retrieval, /display\nname alone is not a dependency identity/);
   assert.match(capture, /Before every vault write, reread `.petry\/assets\/\*\.json`/);
   assert.match(capture, /name-only ref for a registered\nasset as a failed write validation/);
+  assert.match(capture, /destination file must also use the canonical/);
+  assert.match(capture, /immutable asset-ID filename/);
 });
 
 test("management specifies bounded safe writes and recoverable retries", () => {
