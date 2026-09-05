@@ -9,6 +9,17 @@ the artifact identity, revision, activity projection, telemetry, and hashes.
 pnpm eval:agent
 ```
 
+To exercise the user-installed marketplace build in a fresh Claude process,
+without loading the repository as a development plugin:
+
+```sh
+PETRY_EVAL_USE_INSTALLED=1 pnpm eval:agent
+```
+
+Install or update `petry@aai-agency` first. The result reports
+`"plugin_source": "installed"`, which distinguishes release evidence from
+working-tree validation.
+
 The runner requires an authenticated `claude` CLI. Override the executable,
 model, or per-turn ceiling with `PETRY_EVAL_CLAUDE_BIN`, `PETRY_EVAL_MODEL`, and
 `PETRY_EVAL_TURN_BUDGET_USD`. Use `pnpm eval:agent -- --keep` to retain a passing

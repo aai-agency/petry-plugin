@@ -2,10 +2,9 @@
 
 ## Decision
 
-Do not publish yet. The combined candidate is technically healthy, but the two
-open feature PRs are not on `main`, the template PR conflicts with `main`, and the
-exact final commit has not been installed from its documented marketplace in a
-fresh session.
+Released. The combined candidate was merged to `main`, installed through the
+documented GitHub marketplace, exercised in fresh headless and native Cowork
+sessions, and published as `petry--v0.7.0`.
 
 ## Required before release
 
@@ -17,14 +16,28 @@ fresh session.
 - [x] Fix the oracle to accept manifest-named dotted projection fields.
 - [x] Pass the deterministic suite (`32` tests) and plugin validation.
 - [x] Pass three consecutive fresh live lifecycle evals (`3/3`, total $0.6431).
-- [ ] Merge the open feature work and the release-audit fixes into `main`.
-- [ ] Add the GitHub marketplace locally, install the exact merged `0.7.0`
+- [x] Merge the open feature work and the release-audit fixes into `main`.
+- [x] Add the GitHub marketplace locally, install the exact merged `0.7.0`
   plugin, restart the host, and verify all three skills are discovered in a
   fresh session.
-- [ ] Run one installed-only Cowork smoke flow: resolve the saved default well
+- [x] Run one installed-only Cowork smoke flow: resolve the saved default well
   profile template, capture an exact typed event, refresh the same artifact,
   and inspect the plain-language event dialog.
-- [ ] Tag the verified final commit and publish release notes/install steps.
+- [x] Tag the verified final commit and publish release notes/install steps.
+
+## Release evidence
+
+- Release commit: `9632d54551d13496aeeea0b4971e1895d54169e3`
+- Immutable tag: `petry--v0.7.0`
+- Release: <https://github.com/aai-agency/petry-plugin/releases/tag/petry--v0.7.0>
+- Installed package: `petry@aai-agency` 0.7.0, enabled with all three skills.
+- Installed-only lifecycle eval: pass for relevant, unrelated, duplicate, and
+  correction cases; same artifact reached revision 3 with unchanged telemetry.
+- Native Cowork session: <https://claude.ai/cowork/cse_01GutdxHcqSArahbMTA1Vv1v>
+- Native artifact: `ff570184-deae-4c28-b53d-463c4ff69c71`; the saved profile
+  template, scoped source preferences, exact event capture, same-artifact
+  refresh, three same-day flags, AI summary, events view, and plain-language
+  detail dialog were visually verified.
 
 ## Hygiene
 
