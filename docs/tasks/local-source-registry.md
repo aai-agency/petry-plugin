@@ -17,7 +17,7 @@
 - [x] Update release metadata, user examples, and upgrade boundaries.
 - [x] Validate contract examples and regression checks.
 - [x] Exercise candidate instructions in fresh native sessions with synthetic data.
-- [ ] Review final diff, deliver PR, and record evidence and limitations.
+- [x] Review final diff, deliver PR, and record evidence and limitations.
 
 ## Verification
 
@@ -96,3 +96,13 @@ have no transactional multi-writer guarantee. Paid team MCP, credential storage,
 connector reauthentication, workbook/directory permutations, OS-specific host
 behavior and fault-injected partial writes require separate integration coverage.
 No plugin installation or merge is part of this delivery.
+
+## Delivery
+
+PR: https://github.com/aai-agency/petry-plugin/pull/13
+Base: `fix/local-acceptance` (PR #12), which must merge before this PR is
+retargeted to main. Feature commit: `d2e2cd7`. The original checkout's existing
+untracked build files were preserved. Candidate release 0.6.0 is not installed
+or merged. CI runs the same 17 checks on Ubuntu and Windows; current status is
+visible on the PR. Native tests used macOS Cowork with explicitly loaded
+candidate files, not a claim of installed-skill discovery.
