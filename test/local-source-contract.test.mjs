@@ -76,6 +76,14 @@ test("read paths cannot silently create records, switch sources, or join names",
   assert.match(contract(capture), /canonical ref\nand its assigned legacy refs/);
 });
 
+test("registered assets use canonical refs in vault and artifact dependencies", () => {
+  const [, retrieval, capture] = skills;
+  assert.match(retrieval, /`loaded_asset_refs` must include its canonical/);
+  assert.match(retrieval, /display\nname alone is not a dependency identity/);
+  assert.match(capture, /Before every vault write, reread `.petry\/assets\/\*\.json`/);
+  assert.match(capture, /name-only ref for a registered\nasset as a failed write validation/);
+});
+
 test("management specifies bounded safe writes and recoverable retries", () => {
   const management = skills[0];
   for (const pattern of [
