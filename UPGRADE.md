@@ -55,6 +55,16 @@ only its target, preserves original evidence, and links version UUIDs.
 
 ## Lossless migration requires a capable destination
 
+The optional paid team MCP is the intended shared-database upgrade path; it is
+not required for local capture or retrieval. Before selecting a shared store,
+establish the destination workspace, authenticated member, and available
+read/write permissions from its actual tools. Do not infer team membership,
+access controls, or synchronization from the presence of a connection. Keep
+local mode usable if the service is absent or unavailable. If a requested shared
+write fails, report it; do not silently substitute a local save as team success.
+Do not dual-write local and shared stores without an explicit synchronization
+contract. Preserve the local vault during any authorized transfer.
+
 The original vault only mirrored the narrow `petry_map_insight` parameters:
 asset_ref, text, observation_type, valid_at. That was never the full Graphiti
 fact model. The local context-graph MCP inspected for this change still exposes

@@ -18,6 +18,14 @@ petry is an instruction-only skill. Retrieve the user's data dynamically and
 build the result with Claude's artifact capabilities. Do not look for,
 execute, copy, or create plugin helper programs, bundled templates, or renderers.
 
+Local file retrieval needs no petry account, subscription, database, or MCP.
+Do not gate it on the optional paid team service. If the user selects a shared
+MCP source, resolve its actual workspace and authorized scope through its tools;
+do not infer membership or merge same-named assets across local and shared stores.
+If that source is unavailable, report the failure and clearly identify any
+explicitly requested local fallback. Never present a local snapshot as current
+shared data or upload local observations just because a connector is available.
+
 ## Get the data
 
 Use sources in this order:
@@ -83,6 +91,9 @@ values describe the schema; they are not measurements to display:
 
 Requirements:
 
+- Provenance and source snapshots must use observed identifiers, versions,
+  hashes, or file metadata. Omit an unavailable modification time; do not infer
+  it from the data's date range, an example, or the current date.
 - Include only fields and metrics supported by the source. Leave collections
   empty when unavailable; an asset profile or table is valid without time series.
 - Keep domain fields such as well formation, meter serial number, or tank
@@ -91,6 +102,19 @@ Requirements:
   and align comparable series on a shared axis only when needed. Use `null` for a
   missing measurement; do not remove a timestamp to hide a gap, invent a sampling
   interval, or force meter readings into monthly production buckets.
+- Distinguish point timestamps from interval-start/interval-end labels before
+  filtering telemetry. Retain supplied `interval_start` and `interval_end` on
+  normalized points; set display `time` consistently and explain that convention.
+  For source intervals [start,end) and requested window [from,to), include a
+  row when start < to and end > from. An interval ending exactly at to is
+  included; a point at to is excluded. Do not filter interval-end labels as
+  if they were point timestamps. An inclusive date picker ending August 14
+  maps to August 15 00:00 in the known source timezone. Preserve original
+  bounds when clipping the view; do not prorate interval totals or infer
+  partial-period means without a stated, supported method.
+  Verify source and rendered row counts plus first/last included intervals.
+  A complete hourly August 1–14 UTC series has 336 intervals, including
+  August 14 23:00–August 15 00:00. Do not assume this count across DST changes.
 - Preserve each metric's source unit or state any explicit conversion. Do not
   plot incompatible units on a shared unlabeled axis.
 - Set `kind` from source semantics, not just a label or unit; omit it when unknown
@@ -272,6 +296,12 @@ Keep the two temporal axes separate:
   or interval list as a narrow fallback. Never collapse a known duration to one
   point or fabricate supported component props. Do not plot expired versions as
   current facts; explicit audit views label the revision chain.
+  Before adding chart annotations, verify the installed chart's coordinate
+  semantics (absolute timestamps versus forecast-relative offsets) against the
+  actual series. Compare axis limits and telemetry before/after. If annotations
+  distort the axis or require unsupported coercion, retain exact intervals in
+  EventTimeline/details and a labeled interval list; do not ship a misleading
+  overlay merely because an annotations prop exists.
 
 ## Artifact dependencies and applicable refresh
 
@@ -308,6 +338,11 @@ artifact's model as the user changes it; do not write a registry into the vault
 or use browser storage. Record native artifact identity when the surface provides
 it; never guess it or a local project path.
 
+Keep project identity stable and separate from display prose: use the exact
+connected-folder identity/path supplied by the host, without appending state
+such as "no vault present". Populate artifact_id after successful publication
+when returned by the tool, including any explicitly requested saved model copy.
+
 After `/capture` saves an observation, refresh only accessible artifacts in the
 same conversation/project whose renderable insight payload or explicit derived
 dependencies change. Compare BEFORE and AFTER versions, including old and new
@@ -332,6 +367,10 @@ the affected timeline, interval annotations, details and evidence-linked summary
 together; do not alter raw telemetry just because a note changed. Validate the
 changed view and an unaffected view. If update capability, original source, or
 state is unavailable, report that capture was saved but refresh did not happen.
+Saved/default filters are not evidence of live selection. Some hosts reset
+transient controls when an artifact closes or reloads. Preserve exposed state,
+or use a saved view explicitly requested by the user; never claim automatic
+state recovery based only on a serialized initial filter.
 Do not claim live synchronization, create a duplicate artifact, or refresh other
 sessions. This runs during an agent interaction; no watcher, server, hidden
 network request, or background refresh is introduced.
@@ -347,6 +386,14 @@ Inspect the installed package README and TypeScript declarations rather than
 guessing its API. Install it in the temporary artifact workspace with the
 surface's default package manager; never add it to the connected user's project
 unless the user explicitly asked for application implementation there.
+
+Before claiming that package use is blocked, attempt package resolution and a
+minimal bundle with the required focused exports on this surface. A restriction
+on runtime CDN imports does not prove a locally bundled dependency is blocked.
+Record the actual command/tool failure or explicit missing surface capability;
+do not infer a CSP limitation. Resolve ordinary import, peer-dependency, and
+styling errors using the installed documentation before choosing a fallback.
+If a fallback is necessary, state its specific cause and which UI uses it.
 
 Adapt the generic model to the installed component API at the presentation
 boundary. Do not coerce an unsupported asset type or metric into well/oil data
@@ -421,12 +468,25 @@ loaded into the artifact; do not invent causes, recommendations, or missing
 events. State the covered asset count and date range, distinguish observed facts
 from interpretation, and cite the supporting asset names or source-event count
 inside each summary section. Recompute the summary whenever group or filters
-change. A summary sentence must be clickable and open the same supporting-event
+change using the following explicit execution contract. A summary sentence must
+be clickable and open the same supporting-event
 dialog used by grouped event counts. Do not write generated summaries back to
 the vault unless the user separately requests capture.
 
-Pass the generated result into `OperationalSummary` with `generation: "ai"`
-when that export is installed. Keep its observed facts distinct from
+Self-contained artifacts recompute factual summaries locally from filtered
+records, using deterministic calculations and evidence refs. Claude-authored
+interpretations may be precomputed for supported scopes, but show one only when
+its full scope key (asset set, date window, filters, and source/insight revision)
+matches the current view. For a new scope, immediately remove stale
+interpretations, retain locally computed facts, and explain that fresh AI
+interpretation requires asking Claude in the conversation. Filter changes do
+not call an LLM or MCP in the background. Never label a locally computed summary
+as a newly AI-generated interpretation.
+
+Pass a matching Claude-generated result into `OperationalSummary` with
+`generation: "ai"` when that export is installed. For locally derived facts,
+use the installed API's supported non-AI mode; do not invent an enum value.
+Keep its observed facts distinct from
 interpretations, pass the supporting `DrilldownRecord` collection, and route
 `onInsightSelect` to the same contributor dialog. The component displays the
 summary; petry/Claude remains responsible for generating it from the filtered

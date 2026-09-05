@@ -14,6 +14,22 @@ an existing artifact in the same conversation only if its actual insight
 dependencies change. The vault stays inside the connected local project.
 There is no watcher or automatic synchronization between sessions.
 
+## Local use and the optional team service
+
+The free plugin works with your connected files and local Markdown vault.
+It requires no petry account, subscription, graph database, or petry MCP.
+"Local" describes data storage: Claude/Cowork may process connected files on
+Anthropic's servers according to the host's permissions. It does not mean an
+offline language model.
+
+The intended paid offering is an optional MCP-backed shared database for teams.
+Connecting it should add shared knowledge and team access while keeping local
+use available. This repository does not implement that service, its permissions,
+or billing. A connection alone does not upload your vault or switch its source
+of truth; a requested transfer must pass the capability and read-back checks in
+[UPGRADE.md](UPGRADE.md). Do not treat a shared Markdown folder as a database
+with concurrent-write guarantees.
+
 ## Install
 
 In Claude Code or Cowork, add the marketplace and install petry:
@@ -22,6 +38,10 @@ In Claude Code or Cowork, add the marketplace and install petry:
 /plugin marketplace add aai-agency/petry-plugin
 /plugin install petry@aai-agency
 ```
+
+Plugin skills may be namespaced in the host's command picker. If `/capture`
+or `/get-asset-data` is unrecognized, select the installed petry skill or say
+"Use petry:capture to log this" / "Use petry:get-asset-data to show this data."
 
 ## Requirements
 
@@ -121,5 +141,13 @@ semantic asset data table. Grouped values and AI summary statements remain
 clickable and traceable to their contributing assets and source events. The
 package is a generation-time dependency in the artifact workspace, not a petry
 plugin runtime dependency.
+
+Filter changes recompute factual summaries from loaded data locally. AI
+interpretations appear only for the exact scope and data revision they were
+generated for; a new scope can request a fresh interpretation through Claude.
+Self-contained artifacts do not make background AI or MCP requests.
+Some hosts reset transient filters when an artifact closes or reloads. Refresh
+preserves state when the host exposes it, or can use a saved view you specify;
+the plugin cannot promise persistence of controls the host does not retain.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
