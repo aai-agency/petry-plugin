@@ -1,7 +1,7 @@
 {
   "name": "petry",
-  "description": "Instruction-only oil & gas skills for Claude. Create local assets, remember data sources, capture observations, and turn connected data into component-first artifacts. No petry backend required.",
-  "version": "0.6.0",
+  "description": "Instruction-only oil & gas skills for Claude. Create local assets, remember data sources and artifact templates, capture observations, and turn connected data into component-first artifacts. No petry backend required.",
+  "version": "0.7.0",
   "author": {
     "name": "AAI Agency",
     "email": "husam@aai.agency",
