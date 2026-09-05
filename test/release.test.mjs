@@ -5,11 +5,11 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.6.1 with a lowercase plugin name", () => {
+test("release metadata is aligned at 0.7.0 with a lowercase plugin name", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
   const marketplace = readJson(".claude-plugin/marketplace.json");
-  assert.equal(root.version, "0.6.1");
+  assert.equal(root.version, "0.7.0");
   assert.equal(plugin.version, root.version);
   assert.equal(plugin.name, "petry");
   assert.equal(marketplace.plugins[0].name, "petry");
@@ -41,6 +41,15 @@ test("capture defines the vault contract without a runtime dependency", () => {
   assert.match(skill, /captured_at/);
   assert.match(skill, /source/);
   assert.match(skill, /duplicate/i);
+  assert.match(skill, /explicitly names one of the valid observation types/i);
+  assert.match(skill, /explicitly named pressure event remains an `event`/i);
+  assert.match(skill, /Do not silently recategorize it/i);
+  assert.match(skill, /Non-negotiable input fidelity/i);
+  assert.match(skill, /copy every character into `fact`/i);
+  assert.match(skill, /mismatch is a failed write/i);
+  assert.match(skill, /copy that\s+sentence verbatim into the authoritative `fact`/i);
+  assert.match(skill, /Do not shorten, paraphrase, normalize, or remove a date/i);
+  assert.match(skill, /compare `fact` to the user's exact sentence/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });
 
