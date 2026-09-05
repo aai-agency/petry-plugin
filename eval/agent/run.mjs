@@ -21,6 +21,7 @@ const keep = process.argv.includes("--keep");
 const claude = process.env.PETRY_EVAL_CLAUDE_BIN || "claude";
 const model = process.env.PETRY_EVAL_MODEL || "haiku";
 const budget = process.env.PETRY_EVAL_TURN_BUDGET_USD || "0.40";
+const useInstalledPlugin = process.env.PETRY_EVAL_USE_INSTALLED === "1";
 const root = await mkdtemp(join(tmpdir(), "petry-agent-eval-"));
 const sessionId = randomUUID();
 const transcripts = [];
@@ -56,7 +57,7 @@ async function runClaude(prompt, first = false) {
   const args = [
     "-p",
     ...(first ? ["--session-id", sessionId] : ["--resume", sessionId]),
-    "--plugin-dir", repo,
+    ...(useInstalledPlugin ? [] : ["--plugin-dir", repo]),
     "--append-system-prompt-file", adapter,
     "--permission-mode", "acceptEdits",
     "--permission-prompts", "none",
@@ -158,6 +159,7 @@ try {
   console.log(JSON.stringify({
     result: "pass",
     model,
+    plugin_source: useInstalledPlugin ? "installed" : "working-tree",
     cases: ["relevant", "unrelated", "duplicate", "correction"],
     artifact_id: artifact.artifact_id,
     final_revision: (await readArtifact(root)).revision,
