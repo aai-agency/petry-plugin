@@ -218,4 +218,12 @@ Some hosts reset transient filters when an artifact closes or reloads. Refresh
 preserves state when the host exposes it, or can use a saved view you specify;
 the plugin cannot promise persistence of controls the host does not retain.
 
+## Agent evaluation
+
+`pnpm eval:agent` runs the capture/refresh sequence through a real headless
+Claude agent in a disposable project. Deterministic oracles verify the same
+artifact identity, relevant/unrelated/duplicate/correction behavior, vault
+history, and unchanged telemetry. See [eval/agent/README.md](eval/agent/README.md).
+The test-only file-backed adapter does not replace native Cowork visual testing.
+
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
