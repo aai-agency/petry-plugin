@@ -5,7 +5,7 @@ runtime, renderer, server, or backend:
 
 | Skill | What Claude does |
 |---|---|
-| **`/manage-assets`** | Creates and edits local assets, remembers source mappings, and verifies or repairs connections. |
+| **`/manage-assets`** | Creates and edits local assets and artifact templates, remembers source mappings, and verifies or repairs connections. |
 | **`/capture`** | Writes approved insights with Graphiti fact metadata and refreshes only affected artifacts. |
 | **`/get-asset-data`** | Retrieves data for any asset (wells, meters, tanks, pumps, and more) and creates a component-first profile, table, chart, or grouped overview. |
 
@@ -87,6 +87,7 @@ Use `/manage-assets` (or say “Use petry:manage-assets”) to set up local memo
 <connected-project>/.petry/
   sources.json       non-secret locations, field mappings, last verification
   assets/<id>.json   stable identities, properties, source bindings, relationships
+  templates/<id>.json reusable presentation specs by asset type and view type
   vault/*.md         observations and revision history
 ```
 
@@ -125,6 +126,20 @@ are resolved from actual data or clarified when they conflict with another sourc
 link them. Local edits do not change external source data. Archived assets are
 excluded from default lists while remaining available for historical requests.
 Asset changes appear on the next data request; existing artifacts remain snapshots.
+
+## Remember artifact templates
+
+Say “Save this as Standard well profile and use it by default for well profiles.”
+petry stores a declarative presentation spec under `.petry/templates/`, without
+copying the artifact's data, sources, observations, generated AI summary, or
+artifact identity. In a fresh conversation, “Show W-42's well profile” resolves
+the active default for `(well, profile)` and applies its section order, chart
+choices, activity placement, summary mode, and formatting to current data.
+
+Explicitly named templates take precedence over defaults. Current-request layout
+changes override a template for that artifact only. Template edits affect newly
+requested artifacts; they do not silently restyle existing snapshots. Capture
+refresh preserves the exact template revision already recorded by the artifact.
 
 New registered-asset observations use immutable `asset:<id>` refs. Existing
 name-only notes remain readable; explicitly assign their legacy ref to an asset

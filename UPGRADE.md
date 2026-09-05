@@ -134,3 +134,20 @@ semantics and grain before adding those fields. Old clients should not write v2
 files; use all three updated skills. Observation schema 2 is independent and
 unchanged. A future team transfer must retain dataset selections, preferences,
 and per-series provenance in addition to asset identities and fact history.
+
+## Local artifact templates (0.7.0)
+
+`.petry/templates/<id>.json` adds project-local presentation memory. A template
+has stable identity/revision, an exact asset-type and view-type scope, optional
+default pairs, and a declarative spec. It contains no asset rows, source or
+connector identities, observations, artifact IDs, generated summary text,
+credentials, executable code, or tool instructions. Existing artifacts pin the
+template revision they used; newly requested artifacts resolve current defaults.
+
+A future team-template service must provide scoped member permissions, stable
+IDs/revisions, uniqueness for active default pairs, archival history, and
+lossless preservation of unknown inert fields. An authorized transfer must read
+back every template and verify its scope, default ownership, spec, revision, and
+archive state before claiming team availability. Do not upload local templates
+merely because a team MCP is connected, and do not treat shared defaults as local
+defaults until the user selects that workspace and requests the change.
