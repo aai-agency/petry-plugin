@@ -5,22 +5,22 @@ import test from "node:test";
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 const readSkill = (name) => readFileSync(`skills/${name}/SKILL.md`, "utf8");
 
-test("release metadata is aligned at 0.5.1 with a lowercase plugin name", () => {
+test("release metadata is aligned at 0.6.0 with a lowercase plugin name", () => {
   const root = readJson("package.json");
   const plugin = readJson(".claude-plugin/plugin.json");
   const marketplace = readJson(".claude-plugin/marketplace.json");
-  assert.equal(root.version, "0.5.1");
+  assert.equal(root.version, "0.6.0");
   assert.equal(plugin.version, root.version);
   assert.equal(plugin.name, "petry");
   assert.equal(marketplace.plugins[0].name, "petry");
 });
 
-test("the package ships exactly two instruction-only skills", () => {
+test("the package ships exactly three instruction-only skills", () => {
   const skillDirs = readdirSync("skills", { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
-  assert.deepEqual(skillDirs, ["capture", "get-asset-data"]);
+  assert.deepEqual(skillDirs, ["capture", "get-asset-data", "manage-assets"]);
 
   for (const skill of skillDirs) {
     assert.deepEqual(readdirSync(`skills/${skill}`).sort(), ["SKILL.md"]);
@@ -92,6 +92,7 @@ test("the petry brand is lowercase in shipped text", () => {
     ".claude-plugin/marketplace.json",
     "skills/capture/SKILL.md",
     "skills/get-asset-data/SKILL.md",
+    "skills/manage-assets/SKILL.md",
   ];
   for (const file of files) {
     assert.doesNotMatch(readFileSync(file, "utf8"), /\b(?:Petry|PETRY|Petree|PETREE)\b/);

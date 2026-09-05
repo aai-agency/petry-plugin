@@ -1,0 +1,98 @@
+# Local source registry and asset records
+
+## Scope and decisions
+
+- Add configure-once local sources and persistent assets, consumed by capture and retrieval.
+- Keep the instruction-only Claude/Cowork architecture; add manage-assets as the explicit writer.
+- Store non-secret project-relative locations or host connector identities, never credentials.
+- Stable asset refs survive renames; explicit legacy ownership prevents same-name note leakage.
+- Support create, edit, link, archive/restore, source verification and moved-file repair.
+- No paid backend, automatic synchronization, external source writes, or runtime helpers.
+- Base: PR #12 (`fix/local-acceptance`), still open. Deliver a stacked PR.
+
+## Checklist
+
+- [x] Define and implement the shared local contract and management workflow.
+- [x] Integrate saved source resolution and canonical observation identities.
+- [x] Update release metadata, user examples, and upgrade boundaries.
+- [x] Validate contract examples and regression checks.
+- [x] Exercise candidate instructions in fresh native sessions with synthetic data.
+- [ ] Review final diff, deliver PR, and record evidence and limitations.
+
+## Verification
+
+`pnpm run check`: 17/17 passing, including identical shared contracts in all
+three independently loaded skills, example identities/references, and prior
+observation/release safeguards. `git diff --check` passed.
+
+Native tests use candidate skill files explicitly, not an installed 0.6.0 plugin.
+Synthetic fixture: `/Users/husamrahman/Documents/petry-source-acceptance-20260905`.
+Evidence snapshots/hashes: sibling folder with `-evidence` appended.
+The host also retained the prior synthetic acceptance folder as connected;
+the prompt explicitly restricts operations to the new fixture. Initial setup
+read both for disambiguation, but writes targeted only the new project.
+
+- Setup: https://claude.ai/cowork/cse_01VqGDTNFMUcWYMTtrypDcr5
+  Created one source and exactly two assets, no automatic M-202 import.
+  Source `b3a88e09-ec87-41cc-bbe4-f0bbb5cd6621`, verified available.
+  Meter `d818d27c-a8f6-4a04-b7a1-9669ee01bd1a`, external ID `00101`.
+  Pump `0d60bb76-2dbf-4bc5-ba75-07b98b7bfb1d` has no source bindings.
+  Independent disk parse confirmed schema/fields and exact leading-zero identity.
+- Fresh read: https://claude.ai/cowork/cse_01QUiewuednaqFbVy4DProA8
+  Supplied only asset names and candidate retrieval instructions, no source path
+  or mapping. Returned 310 and 320 psig, 2 rows, mean 315 psig; excluded the
+  M-202/00202 row. Source-free pump profile loaded. Every fixture file hash
+  matched the post-creation snapshot after the read.
+- Capture/rename/archive in the fresh-read session: created exactly one v2
+  event with canonical meter ref, then renamed it to North meter (revision 2).
+  Source binding, serial number, and immutable IDs survived. Archived P-7 at
+  revision 2. Disk oracle confirmed the exact original fact and date precision.
+- Missing-source fresh session:
+  https://claude.ai/cowork/cse_01G4ux5f9UUF32PZaEFewwR4
+  The test moved the CSV to `data/archive/readings.csv` before this read. Claude
+  reported the configured path missing despite saved status available. It did
+  see the moved filename during project inspection but did not use it as
+  telemetry or update the registry. It returned the renamed meter's original
+  canonical-ref calibration history and excluded P-7 from the active list.
+  Independent hashes confirmed every fixture file remained byte-identical.
+- Repair/restore in that session: source path changed to the supplied archive
+  path; source ID and all meter bindings remained stable, registry revision 2,
+  available verification. P-7 restored. Independent before/after hashes show
+  only the registry and pump record changed. The requested same-name meter
+  rename was a byte-identical no-op, including revision/timestamps, and the
+  existing calibration note was unchanged. Subsequent retrieval returned both
+  original pressure values with North meter as the display name and M-101 as
+  source provenance, plus the unchanged calibration fact.
+- Negative native requests: duplicate `(source_id, external_id)` binding to P-7
+  and `../outside.csv` source registration were both rejected. The agent used
+  path normalization without reading outside the fixture. Independent hashes
+  were identical to the repaired snapshot. CSV bytes match the original setup
+  fixture despite the move; no scratch/helper files were left in the project.
+- Final candidate files are retained in the fixture with SHA-256 hashes in
+  `final-candidate-hashes.json`. The final retrieval edit after the run was line
+  wrapping only; the tested current-name behavior and all contracts are unchanged.
+
+## Acceptance protocol
+
+1. Start with a connected synthetic folder and a CSV with textual `00101` and
+   another asset ID. Supply the candidate manage-assets skill. Remember the
+   CSV and create/bind one meter plus a source-free pump. Assert only requested
+   assets were created; read back the registry and IDs.
+2. In a fresh conversation, load candidate retrieval and ask for those assets
+   without a source filename. Verify rows, identity, units, mean and read-only
+   file hashes. No artifact is required for this persistence-specific check.
+3. Capture a canonical-ref observation, rename the meter, archive/restore the
+   pump, and verify immutable IDs, revision behavior, and preserved note history.
+4. Move the synthetic CSV on disk. A read must report missing source while
+   retaining the registry. Repair the supplied path, retaining source ID/bindings,
+   and read again. Repeating a rename should be a byte-identical no-op.
+5. Reject an out-of-project path and a conflicting binding without persisting
+   either. Document any model deviation and targeted correction separately.
+
+## Limits
+
+Instruction conformance checks are not a database implementation. Local files
+have no transactional multi-writer guarantee. Paid team MCP, credential storage,
+connector reauthentication, workbook/directory permutations, OS-specific host
+behavior and fault-injected partial writes require separate integration coverage.
+No plugin installation or merge is part of this delivery.

@@ -96,3 +96,21 @@ When a graph connection is available:
 Expanding the separate context-graph MCP/importer is outside this plugin change.
 Until it supports the full record, local capture and artifact refresh work
 without it, and the vault remains the source of truth.
+
+## Local source and asset identities (0.6.0)
+
+`.petry/sources.json` and `.petry/assets/<id>.json` use schema_version 1.
+They are optional: existing vault-only projects continue working without a
+migration. Source IDs and local asset IDs are project-scoped UUIDs, and a
+registered asset's `asset:<id>` ref is immutable across renames. Explicit
+legacy_refs associate old notes without rewriting them. The JSON revision
+counter detects some stale writes; it is not a concurrent database transaction.
+
+A future authorized team transfer must preserve local id/ref, legacy refs,
+source ownership, relationships, archival state, unknown metadata, and all
+observation revision chains. Resolve actual shared IDs separately and retain
+an explicit local-to-shared mapping. Never replace graph endpoint fields with a
+local asset UUID merely because both look like UUIDs. Connector/resource IDs
+and project-relative paths may need explicit destination remapping; local
+credentials are neither present nor transferable. This release does not
+implement that team importer or claim shared-service compatibility.

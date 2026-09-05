@@ -1,10 +1,11 @@
 # petry — instruction-only O&G skills for Claude
 
-petry gives Claude and Cowork two oil-and-gas workflows without shipping a
+petry gives Claude and Cowork three oil-and-gas workflows without shipping a
 runtime, renderer, server, or backend:
 
 | Skill | What Claude does |
 |---|---|
+| **`/manage-assets`** | Creates and edits local assets, remembers source mappings, and verifies or repairs connections. |
 | **`/capture`** | Writes approved insights with Graphiti fact metadata and refreshes only affected artifacts. |
 | **`/get-asset-data`** | Retrieves data for any asset (wells, meters, tanks, pumps, and more) and creates a component-first profile, table, chart, or grouped overview. |
 
@@ -40,12 +41,12 @@ In Claude Code or Cowork, add the marketplace and install petry:
 ```
 
 Plugin skills may be namespaced in the host's command picker. If `/capture`
-or `/get-asset-data` is unrecognized, select the installed petry skill or say
+or `/get-asset-data` or `/manage-assets` is unrecognized, select the installed petry skill or say
 "Use petry:capture to log this" / "Use petry:get-asset-data to show this data."
 
 ## Requirements
 
-There are no runtime dependencies. petry contains only two `SKILL.md` files and
+There are no runtime dependencies. petry contains only three `SKILL.md` files and
 plugin metadata. Claude uses the current surface's own connected-folder, data,
 and artifact capabilities.
 
@@ -61,10 +62,55 @@ invents asset data unless the user explicitly asks for sample data.
 - Summarize a subsystem with wells and meters, preserving each asset's identity
   and aggregating only compatible metrics without double-counting shared flow.
 
-The renamed `/get-asset-data` replaces `/get-well-production`; it is not a third
+The renamed `/get-asset-data` replaces `/get-well-production`; it is not an additional
 skill or an alias. Well-production requests remain supported. Existing vault
 files need no migration. `/capture` creates `.petry/vault/` on the first approved
 write if it is absent and reuses it thereafter.
+
+## Remember sources and create assets
+
+Use `/manage-assets` (or say “Use petry:manage-assets”) to set up local memory:
+
+- “Create meter M-101 with serial number ABC-101.” A source is optional.
+- “Remember data/readings.csv as Meter readings and link M-101 to meter_id
+  00101 for telemetry.” Claude inspects fields and preserves the leading zeros.
+- In a new conversation connected to the same folder: “Show M-101 readings.”
+  Claude loads the saved binding and checks that source without asking again.
+- “The Meter readings file moved to data/archive/readings.csv. Update it.”
+  The source ID and asset bindings survive; changed columns need a new mapping.
+- “Rename M-101 to North meter.” Its ID and captured history remain connected.
+- “Archive North meter” / “Restore North meter.” History is retained.
+- “List my assets and verify their sources.” Saved availability is updated only
+  for an explicit verification/setup request, not an ordinary data read.
+
+```text
+<connected-project>/.petry/
+  sources.json       non-secret locations, field mappings, last verification
+  assets/<id>.json   stable identities, properties, source bindings, relationships
+  vault/*.md         observations and revision history
+```
+
+Setup/edit requests authorize the corresponding local writes. Reads do not
+create records or silently import an inventory. Sources can be project files,
+explicit directory file lists, or existing host connectors. Workbook sheet names
+and connector workspace/resource IDs keep source scope precise. Passwords,
+tokens, connection strings, and signed URLs are never stored here; authentication
+stays in the host. A remembered connector must still be available and authorized
+in the current session. Missing connections retain their configuration and show
+what needs repairing; they do not silently fall back to another system.
+
+Each capability (such as telemetry or maintenance) has one source owner per
+asset. Same-named assets in different systems stay separate unless you explicitly
+link them. Local edits do not change external source data. Archived assets are
+excluded from default lists while remaining available for historical requests.
+Asset changes appear on the next data request; existing artifacts remain snapshots.
+
+New registered-asset observations use immutable `asset:<id>` refs. Existing
+name-only notes remain readable; explicitly assign their legacy ref to an asset
+before combining them with that asset's history. Renaming does not rewrite facts
+or automatically claim another asset's old notes. The local JSON records are
+versioned and checked before writes, but do not provide database transactions or
+multi-user locking. Back up the project folder to preserve its local memory.
 
 ## Vault format and temporal history
 
@@ -121,6 +167,7 @@ The old narrow `petry_map_insight` API is not a lossless full-record importer.
 
 ```text
 .claude-plugin/                 marketplace and plugin metadata
+skills/manage-assets/SKILL.md   local assets and source registry
 skills/capture/SKILL.md         capture behavior and Markdown contract
 skills/get-asset-data/SKILL.md
                                 asset data retrieval and artifact contract
