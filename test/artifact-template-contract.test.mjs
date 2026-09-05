@@ -27,6 +27,7 @@ test("template example has stable identity and deterministic type defaults", () 
   assert.deepEqual(template.spec.activity, {
     placement: "below-timeseries",
     same_day: "separate",
+    annotations: { placement: "on-timeseries", series: "oil_volume" },
   });
   assert.equal(template.created_at, template.updated_at);
 });
@@ -44,6 +45,14 @@ test("template contract excludes live data and executable instructions", () => {
     "tool instructions",
     "never execute them",
   ]) assert.match(contract, new RegExp(phrase, "i"));
+});
+
+test("templates can preserve separate same-day timeseries annotations", () => {
+  for (const text of skills) {
+    assert.match(text, /"same_day": "separate"/);
+    assert.match(text, /"annotations": \{ "placement": "on-timeseries", "series": "oil_volume" \}/);
+    assert.match(text, /timeseries annotation placement/);
+  }
 });
 
 test("template resolution and snapshot behavior are unambiguous", () => {

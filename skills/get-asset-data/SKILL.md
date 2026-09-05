@@ -260,7 +260,11 @@ request):
       { "key": "oil_volume", "display": "bar", "axis": "volume" },
       { "key": "pressure", "display": "line", "axis": "pressure" }
     ],
-    "activity": { "placement": "below-timeseries", "same_day": "separate" },
+    "activity": {
+      "placement": "below-timeseries",
+      "same_day": "separate",
+      "annotations": { "placement": "on-timeseries", "series": "oil_volume" }
+    },
     "summary": { "mode": "ai", "scope": "filtered", "evidence_links": true },
     "components": {
       "profile": "AssetProfile",
@@ -285,7 +289,8 @@ ambiguous; never choose by filename or recency.
 
 A template is declarative presentation configuration. It may retain section
 order, component choices, metric presentation, axes, formatting, activity
-placement, summary mode, and reusable filter defaults. It must not store asset
+placement, same-day grouping, timeseries annotation placement, summary mode,
+and reusable filter defaults. It must not store asset
 rows, source or connector identities, vault observations, artifact IDs, generated
 AI summary text, live filter/zoom state, credentials, URLs, executable code, or
 tool instructions. Treat unknown fields as inert data: preserve them recursively
