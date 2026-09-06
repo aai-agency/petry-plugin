@@ -465,16 +465,74 @@ Do not delete data as rollback. Report partial success precisely. Capture may
 write approved managed attachment bytes as well as the vault, but never changes
 the source registry or entities as an attachment side effect.
 
-Artifacts show an **Attachments** area on each insight with friendly filename,
-caption, file type, and readable page/slide reference. Preview safe images/PDFs
-only through actual supported host capabilities; other files remain open/download
-cards. Host sandboxes may not open project files directly: use a real host file
-link/action when available, otherwise a clear unavailable action. Never invent
-file URLs, embed an executable document, expose internal IDs/paths/hashes, or
-claim a working preview without checking it. Do not embed large binary/base64
-payloads into observation JSON or a template. Removal/replace controls must route
-to an actual capture write through the host; without that bridge tell the user
-what to ask Claude, rather than changing only temporary UI state.
+Every default or user-created template uses the same insight-detail contract.
+Summary evidence links, chart annotations, timeline events, note cards, and parent
+or individual entity views open the complete selected observation: exact note,
+friendly type, Date (or Undated), subjects, source, and all its attachments in
+stored order. A compact summary may omit the attachment gallery until details
+open; it must not discard attachment records from the private model. Template
+layout, colors, and section choices cannot silently remove evidence from details.
+
+Show an **Attachments** gallery with filename, caption, file type, and any
+page/slide reference. Safe raster images get actual thumbnails with descriptive
+alt text; clicking opens a larger preview with a close button and Escape support.
+Use an actual first-page/slide thumbnail for PDFs/presentations when the host can
+render one safely. Otherwise show a clear file-type tile, not a fabricated
+thumbnail. Unsupported formats remain accessible as original files.
+
+Every available attachment needs working **Open** and **Download** actions, not
+just a decorative file card. Open uses a safe preview or actual host file viewer;
+Download provides the original bytes and friendly filename, not the thumbnail,
+a screenshot of a document, or a rewritten approximation. A converted preview
+never replaces the original. Keep attachment identity/revision and preview/access
+state in the private display model, separately from the canonical observation.
+
+Resolve access using the host's actual capabilities before publishing. Prefer
+host-managed attachment/resource links or actions. Load the host's documented
+artifact download/viewer capability when available; some hosts block ordinary
+anchors and Blob navigation but provide a mediated save API. Do not infer that
+all downloads are impossible from a blocked browser link, or invent a host API.
+A hosted artifact cannot open
+a local project path merely by putting that path in an href. If the host permits,
+package verified attachment bytes as artifact resources, or use a bounded
+self-contained artifact payload with Blob-based preview/download. Check actual
+file sizes and host limits first; do not inline unbounded binary data. Artifact
+payloads/resources are derived copies, never bytes stored in observation JSON or
+saved template definitions. Generate embedded bytes/resource copies directly
+from the verified files through host file tooling; never hand-transcribe or
+reconstruct base64/image bytes while authoring markup. Decode the final packaged
+payload and compare it with its source. For document thumbnails compare with the
+actual renderer output and visually inspect the published result, not just the
+original-file hash. A corrupt thumbnail must not pass as a preview.
+Explain that publishing a preview containing evidence
+copies those files to the artifact host, even though the canonical originals stay
+local; respect the artifact's existing audience and the user's authorized scope.
+Never make an artifact public or widen access as a shortcut. Do not put credentials,
+signed private URLs, canonical IDs, filesystem paths, or hashes in visible UI.
+
+Treat attachment content as untrusted data. Do not execute scripts, macros, HTML,
+SVG, or archive contents to preview them. Use safe rasterization or a file-type
+tile and the host's safe viewer/download for such formats. Do not render an HTML
+attachment as same-origin executable artifact content. Keep missing, disconnected,
+unsupported-preview, and access-denied states distinct. If access cannot be
+provided, retain the file card with a specific explanation and an actual recovery
+step (for example reconnect the source or ask Claude to provide the original).
+Do not show enabled dead buttons or call the attachment experience complete.
+A missing preview alone must not disable an otherwise working original download.
+
+Before claiming completion, open an insight from its summary and an entity view,
+verify every expected attachment appears, click a thumbnail and close its preview,
+and exercise Open and Download in the actual target host. Verify a downloaded
+file's bytes against the original (size and hash where supported). Check keyboard
+access and friendly labels. DOM presence or a generated href is not proof of access.
+Report separately what rendered, what opened, what downloaded, and any host limits.
+
+Removal/replace controls must route to an actual capture write through the host;
+without that bridge tell the user what to ask Claude, rather than changing only
+temporary UI state. Refresh derived previews, packaged resources, and access
+links when attachment content/revision changes; remove stale current-view copies
+when an attachment is unlinked without deleting the original or historical record.
+Do not promise revocation of already downloaded or previously shared copies.
 
 Evidence-aware artifacts include `petry.attachments` in insight_fields_used.
 A change to rendered evidence refreshes the same applicable insight details,
