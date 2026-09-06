@@ -6,11 +6,11 @@ PR #20 merged as f8a4c0ef08b5c2113a93a761aabf07b3e6bde281 on 2026-09-06 after Li
 ## Checklist
 - [x] Merge PR #20 and preserve existing checkout changes.
 - [ ] Update native installed plugin and verify loaded instructions.
-- [ ] Create project, well, and custom workstream entities with explicit membership.
-- [ ] Capture a shared note once and verify both individual views and parent rollup.
-- [ ] Attach files, update and remove an attachment; inspect persistence/history.
-- [ ] Verify a fresh Cowork session recovers local state.
-- [ ] Capture native visual evidence and document limitations.
+- [x] Create project, well, and custom workstream entities with explicit membership.
+- [x] Capture a shared note once and verify both individual views and parent rollup.
+- [x] Attach files, update and remove an attachment; inspect persistence/history.
+- [x] Verify a fresh Cowork session recovers local state.
+- [x] Capture native visual evidence and document limitations.
 
 ## Evidence
 - Existing original checkout build/ remains untouched.
@@ -29,3 +29,12 @@ PR #20 merged as f8a4c0ef08b5c2113a93a761aabf07b3e6bde281 on 2026-09-06 after Li
 - FINDING: Claude skipped the requested component library based on an asserted static-host limitation without demonstrating a bundle attempt. Do not count this as component adherence.
 - Cowork updated its actual artifact identity in the private manifest and republished the same artifact; full manifest read-back not independently inspected yet.
 - BLOCKED: native control reports "The Mac is locked and automatic unlock could not unlock it." Evidence-mutation prompt was not successfully submitted. Attachment add/remove/caption edits, fresh-session retrieval, and a recording remain pending. User must unlock the Mac to continue native acceptance.
+
+## Resumed native acceptance
+
+- Mac unlocked; completed attachment update through the same Cowork session.
+- PASS: removed PowerPoint, added PNG, and captioned PDF (attachment revision 2) on the existing shared note. Independent JSON assertions prove predecessor differs only by expiry, successor links to predecessor, mutation times match, note/world date/subjects unchanged, project budget note unchanged, and all original evidence file hashes intact. Snapshot: `03-updated-notes.json`.
+- PASS: same native artifact ID `739ad5d4-d879-4ebe-a271-b31750de58f7`, revision `1788726954-cd01`, shows captioned PDF and PNG, excludes removed PowerPoint, retains both subjects and project/individual note scoping. Native detail screenshot shown in conversation.
+- PASS: saved HTML and model under demo `overview/`; independently read complete dependency manifest including root/descendant membership, all required filters, active observation UUIDs, attachment field consumption and actual artifact ID.
+- PASS: fresh Cowork session https://claude.ai/cowork/cse_01XtJe62WVQL21yKKarUmX11 read saved records and recovered workstream's cross-file shared note, current PDF/PNG and caption, historical-only PowerPoint, and project-only budget note. Native response and four tool calls inspected. All 10 project file hashes unchanged after read-only session. This proves disk recall, not background synchronization.
+- Visual evidence is native screenshots in the task conversation, not a new video recording. Informational local attachment cards and unverified component adherence remain the limitations described above.
