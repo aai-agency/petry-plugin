@@ -33,8 +33,14 @@ const dependencies = {artifact_id: 'test-artifact', project_identity: 'test-proj
 const note = (uuid, refs, expired_at = null) => ({uuid, fact: uuid, expired_at, valid_at: null, invalid_at: null, fact_embedding: null, petry: {asset_refs: refs, type: 'note', attachments: [], supersedes: []}});
 test('rollup oracle rejects duplicated multi-subject notes, ancestor leakage and lost evidence', () => {
   const records = [note('a', ['asset:case', 'asset:well']), note('b', ['asset:deal']), note('c', ['asset:outside']), note('old', ['asset:well'], '2026-01-01T00:00:00Z')];
+  records[0].petry.attachments = [{attachment_id: 'test-evidence', revision: 1, caption: null, location: {kind: 'project_file', path: 'docs/evidence.pdf'}}];
   const artifact = {artifact_id: 'test-artifact', petry_dependencies: {...dependencies, loaded_asset_refs: scopeFor(graph, 'asset:deal'), entity_scope: {mode: 'descendants', root_asset_refs: ['asset:deal']}}, activity: records.slice(0, 2)};
   assertRollup(artifact, records, graph, 'asset:deal');
+  const enriched = structuredClone(artifact);
+  enriched.activity[0].petry.attachments[0].available = true;
+  assertRollup(enriched, records, graph, 'asset:deal');
+  enriched.activity[0].petry.attachments[0].caption = 'incorrect';
+  assert.throws(() => assertRollup(enriched, records, graph, 'asset:deal'));
   assert.throws(() => assertRollup({...artifact, petry_dependencies: {...artifact.petry_dependencies, includes_undated: false}}, records, graph, 'asset:deal'));
   assertRollup({...artifact, activity: artifact.activity.map(observation => ({observation}))}, records, graph, 'asset:deal');
   assert.throws(() => assertRollup({...artifact, activity: [...artifact.activity, records[0]]}, records, graph, 'asset:deal'), /duplicate/);

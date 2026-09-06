@@ -78,3 +78,8 @@ headless tests must not be described as native UI evidence.
   concrete observation-bound example rather than the new blank template.
 - Inspected the real Claude session log: Skill loads point to this worktree,
   including the new manifest template, not a stale installed plugin.
+- The high-effort clean run passed through fresh-session recovery; an oracle
+  falsely rejected display-only available:true enrichment. The corrected oracle
+  still requires every stored attachment field verbatim, permits derived display
+  metadata, and rejects altered authoritative fields. The retained output passed
+  revalidation without any data edits. A final clean run uses this oracle.

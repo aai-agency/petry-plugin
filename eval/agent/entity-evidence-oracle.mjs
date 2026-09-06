@@ -56,7 +56,16 @@ export function assertRollup(artifact, records, entities, rootRef, mode = 'desce
     const original = expected.find(x => x.uuid === item.uuid);
     assert.equal(item.fact, original.fact);
     assert.deepEqual(item.petry.asset_refs, original.petry.asset_refs, 'rollup changed subjects');
-    assert.deepEqual(item.petry.attachments ?? [], original.petry.attachments ?? []);
+    const shownAttachments = item.petry.attachments ?? [];
+    const savedAttachments = original.petry.attachments ?? [];
+    assert.equal(shownAttachments.length, savedAttachments.length);
+    for (let index = 0; index < savedAttachments.length; index++) {
+      const saved = savedAttachments[index], shown = shownAttachments[index];
+      // Retrieval may add current availability for display. Every authoritative
+      // stored field (including unknown fields) must still be retained verbatim.
+      assert.deepEqual(Object.fromEntries(Object.keys(saved).map(key => [key, shown[key]])), saved);
+      if ('available' in shown) assert.equal(shown.available, true, 'all eval files remain available');
+    }
   }
 }
 
@@ -85,12 +94,12 @@ export async function assertLocalAttachments(root, record) {
     assert.ok(!isAbsolute(attachment.location.path));
     assert.ok(!attachment.location.path.split(/[\\/]/).includes('..'));
     const resolved = await realpath(join(root, attachment.location.path));
+    const rel = relative(rootReal, resolved);
+    assert.ok(rel.split(/[\\/]/)[0] !== '..' && !isAbsolute(rel));
     const info = await stat(resolved);
     assert.ok(info.isFile(), 'attachment is not a regular file');
     if (attachment.size_bytes != null) assert.equal(attachment.size_bytes, info.size);
     if (attachment.sha256 != null) assert.equal(attachment.sha256, createHash('sha256').update(await readFile(resolved)).digest('hex'));
-    const rel = relative(rootReal, resolved);
-    assert.ok(rel.split(/[\\/]/)[0] !== '..' && !isAbsolute(rel));
     if (attachment.location.kind === 'managed_file') {
       const parts = attachment.location.path.split('/');
       assert.equal(parts.length, 5);
