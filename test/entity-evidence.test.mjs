@@ -6,11 +6,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scopeFor, assertRollup, assertAttachmentRevision, assertLocalAttachments } from '../eval/agent/entity-evidence-oracle.mjs';
 
-const skills = ['manage-assets', 'capture', 'get-asset-data'].map(name => readFileSync(`skills/${name}/SKILL.md`, 'utf8'));
-const section = (s, heading) => s.split(`## ${heading}\n`)[1].split('\n## ')[0];
+const skills = ['manage-assets', 'capture', 'get-asset-data'].map(name => readFileSync(`skills/${name}/SKILL.md`, 'utf8').replace(/\r\n/g, '\n'));
+const section = (s, heading) => s.replace(/\r\n/g, '\n').split(`## ${heading}\n`)[1].split('\n## ')[0];
 test('independently loaded skills agree on entity and evidence contracts', () => {
   for (const heading of ['Entity types and parent insight scope', 'Capture attachments and local evidence']) {
     assert.ok(section(skills[0], heading));
+    assert.equal(section(skills[0].replace(/\n/g, '\r\n'), heading), section(skills[0], heading));
     for (const skill of skills) assert.equal(section(skill, heading), section(skills[0], heading));
   }
   for (const skill of skills) {
