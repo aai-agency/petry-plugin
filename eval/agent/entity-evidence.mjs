@@ -1,0 +1,148 @@
+import assert from 'node:assert/strict';
+import { randomUUID, createHash } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { mkdtemp, mkdir, readFile, writeFile, copyFile, cp, appendFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { observations, snapshot } from './oracle.mjs';
+import { readEntities, assertRollup, assertAttachmentRevision, assertLocalAttachments } from './entity-evidence-oracle.mjs';
+const here = dirname(fileURLToPath(import.meta.url));
+const repo = resolve(here, '../..');
+const root = await mkdtemp(join(tmpdir(), 'petry-entity-evidence-'));
+const uploads = await mkdtemp(join(tmpdir(), 'petry-upload-'));
+const model = process.env.PETRY_EVAL_MODEL || 'sonnet';
+const effort = process.env.PETRY_EVAL_EFFORT || 'high';
+const transcripts = []; let session = randomUUID(); let first = true;
+const results = [];
+const skillSha256 = Object.fromEntries(await Promise.all(['manage-assets', 'capture', 'get-asset-data'].map(async name => [name, createHash('sha256').update(await readFile(join(repo, 'skills', name, 'SKILL.md'))).digest('hex')])));
+const artifactFile = join(root, '.petry/eval-artifacts/parent.json');
+const artifact = async () => JSON.parse(await readFile(artifactFile, 'utf8'));
+async function turn(label, prompt, fresh = false) {
+  if (fresh) {session = randomUUID(); first = true;}
+  const args = ['-p', ...(first ? ['--session-id', session] : ['--resume', session]), '--plugin-dir', repo,
+    '--append-system-prompt-file', join(here, 'entity-evidence-adapter.md'), '--permission-mode', 'acceptEdits', '--permission-prompts', 'none',
+    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', effort, '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '1.50', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
+  first = false;
+  const response = await new Promise((ok, reject) => {
+    const child = spawn(process.env.PETRY_EVAL_CLAUDE_BIN || 'claude', args, {cwd: root, stdio: ['ignore', 'pipe', 'pipe']});
+    let stdout = '', stderr = '';
+    child.stdout.on('data', x => stdout += x); child.stderr.on('data', x => stderr += x);
+    child.on('error', reject); child.on('close', code => ok({code, stdout, stderr}));
+  });
+  transcripts.push({label, prompt, ...response});
+  await writeFile(join(uploads, 'transcripts.json'), JSON.stringify(transcripts, null, 2));
+  assert.equal(response.code, 0, response.stderr);
+  const output = JSON.parse(response.stdout);
+  assert.ok(!output.is_error, output.result || output.subtype);
+  console.log(`Completed agent turn: ${label}`);
+}
+await mkdir(join(root, 'documents'), {recursive: true});
+await mkdir(dirname(artifactFile), {recursive: true});
+for (const file of ['review.pdf', 'review.pptx', 'opaque.bin']) await copyFile(join(here, 'fixtures', file), join(root, 'documents', file));
+await copyFile(join(here, 'fixtures/inspection.png'), join(uploads, 'inspection.png'));
+const continuation = process.env.PETRY_EVAL_CONTINUE_PROJECT;
+const seed = process.env.PETRY_EVAL_SEED_PROJECT;
+assert.ok(!(seed && continuation), 'Choose either a seed or a continuation project');
+const continuationRecords = continuation ? await observations(continuation) : [];
+const seedRecords = seed ? (await observations(seed)).filter(x => !(x.petry.supersedes?.length)).map(x => ({...x, expired_at: null})) : [];
+const seedCurrent = seedRecords.find(x => x.fact === 'Engineering review supports the base case.');
+const attachmentId = [...continuationRecords, ...(seedCurrent ? [seedCurrent] : [])].flatMap(x => x.petry.attachments ?? []).find(x => x.location.kind === 'managed_file')?.attachment_id || randomUUID();
+for (const revision of [1, 2]) await mkdir(join(root, '.petry/attachments', attachmentId, String(revision)), {recursive: true});
+const initialFiles = await snapshot(root);
+try {
+  let entities, records, current, falconRef, wellRef;
+  const entity = name => entities.find(x => x.name === name);
+  if (continuation) {
+    // Preserve prior evidence: copy a post-removal project into a NEW workspace.
+    for (const directory of ['assets', 'vault', 'attachments']) await cp(join(continuation, '.petry', directory), join(root, '.petry', directory), {recursive: true});
+    entities = await readEntities(root); records = await observations(root);
+    falconRef = entity('Falcon').ref; wellRef = entity('W-1').ref;
+    current = records.find(x => !x.expired_at && x.fact === 'Engineering review supports the base case.');
+    assert.ok(current); assert.equal(current.petry.attachments.length, 3);
+    await assertLocalAttachments(root, current);
+    results.push('continued-after-removal-in-new-project');
+  } else {
+  if (seed) {
+    // Prepare a NEW disposable pre-edit fixture from retained original captures.
+    // Never mutate the earlier run or describe this as another creation/upload run.
+    assert.equal(seedRecords.length, 4, 'seed requires four original captures');
+    await cp(join(seed, '.petry/assets'), join(root, '.petry/assets'), {recursive: true});
+    await mkdir(join(root, '.petry/vault'), {recursive: true});
+    const seededFiles = new Set();
+    for (const record of seedRecords) {
+      const id = record.petry.asset_refs[0].replace('asset:', '');
+      assert.match(id, /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i);
+      if (!seededFiles.has(id)) await writeFile(join(root, '.petry/vault', `${id}.md`), `# Fixture\n\n<!-- petry:asset ref="asset:${id}" slug="${id}" -->\n\n## Observations\n\n`);
+      seededFiles.add(id);
+      await appendFile(join(root, '.petry/vault', `${id}.md`), `- ${record.fact}\n\n<!-- petry:observation schema="2" -->\n\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\`\n`);
+    }
+    current = seedCurrent; records = seedRecords;
+    await copyFile(join(seed, current.petry.attachments.find(x => x.location.kind === 'managed_file').location.path), join(root, `.petry/attachments/${attachmentId}/1/inspection.png`));
+    entities = await readEntities(root); falconRef = entity('Falcon').ref; wellRef = entity('W-1').ref;
+    await assertLocalAttachments(root, current);
+    results.push('seeded-existing-project');
+  } else {
+  await turn('create hierarchy', 'Use petry:manage-assets. Create Falcon (deal), North (facility), W-1 (well), Base (economics_case), Research (my custom type "Research Basket"), and Outside (meter). Link Falcon contains North, Base, and Research; North contains W-1; Research contains W-1 too. Also link Falcon related_to Outside. No sources are needed. This explicitly authorizes creation and links.');
+  entities = await readEntities(root);
+  assert.equal(entities.length, 6); assert.ok(!entities.some(x => x.id === '40f8e9d6-d864-44ab-9839-feb209501f11'), 'copied instruction example ID'); assert.equal(entity('Research').type, 'Research Basket');
+  assert.equal(entity('W-1').type, 'well');
+  falconRef = entity('Falcon').ref; wellRef = entity('W-1').ref;
+  await turn('capture with binary upload', `Use petry:capture. Capture this exact note on W-1: "Engineering review supports the base case." Attach documents/review.pdf, documents/review.pptx and documents/opaque.bin in place. Also import this authorized host upload: ${join(uploads, 'inspection.png')}. The host allocated attachment ID ${attachmentId}, revision 1 and destination .petry/attachments/${attachmentId}/1/inspection.png for its byte copy; use name inspection.png. Do not infer anything from file contents. This authorizes the attachment save and capture.`);
+  records = await observations(root); assert.equal(records.length, 1);
+  await readFile(join(root, '.petry/vault', `${entity('W-1').id}.md`));
+  current = records[0]; assert.equal(current.fact, 'Engineering review supports the base case.'); assert.deepEqual(current.petry.asset_refs, [wellRef]);
+  assert.equal(current.petry.attachments.length, 4); await assertLocalAttachments(root, current);
+  assert.deepEqual(await readFile(join(root, `.petry/attachments/${attachmentId}/1/inspection.png`)), await readFile(join(uploads, 'inspection.png')));
+  results.push('binary-upload-and-multiple-file-types');
+  await turn('capture parent and multiple subjects', 'Use petry:capture. Save exact note "Bid review is pending." on Falcon; exact note "The base case needs review." jointly on Base and W-1, stored once; and exact note "Outside calibration is pending." on Outside. These are three authorized notes.');
+  records = await observations(root); assert.equal(records.length, 4);
+  }
+  await turn('parent rollup', 'Use petry:get-asset-data. Show Falcon with consolidated notes from its child entities, all dates including undated, and attachment cards. Use the evaluation host artifact.');
+  assertRollup(await artifact(), records, entities, falconRef); assert.equal((await artifact()).activity.length, 3);
+  results.push('parent-diamond-multi-subject-dedup-and-unrelated-exclusion');
+  const beforeArtifact = await artifact();
+  await turn('replace attachment', `Use petry:capture. Replace attachment ${attachmentId} on observation ${current.uuid} with documents/review.pdf, keeping it a project-file reference, name "Updated review.pdf", caption "Revised supporting file". Preserve the exact fact and all other attachments. This is approval of this precise replacement.`);
+  current = assertAttachmentRevision(current, await observations(root), 4);
+  const replacement = current.petry.attachments.find(x => x.attachment_id === attachmentId);
+  assert.equal(replacement.revision, 2); assert.equal(replacement.location.path, 'documents/review.pdf');
+  assert.equal((await artifact()).revision, beforeArtifact.revision + 1);
+  assertRollup(await artifact(), await observations(root), entities, falconRef);
+  await turn('remove attachment', `Use petry:capture. Remove attachment ${attachmentId} from current observation ${current.uuid}. Preserve the note and other attachments. Unlink only; keep original and historical files.`);
+  current = assertAttachmentRevision(current, await observations(root), 3);
+  assert.ok(!current.petry.attachments.some(x => x.attachment_id === attachmentId));
+  assertRollup(await artifact(), await observations(root), entities, falconRef);
+  results.push('replace-remove-history-and-parent-refresh');
+  const beforeNoop = await snapshot(root);
+  await turn('repeat removal', `Use petry:capture. Remove attachment ${attachmentId} again from observation ${current.uuid}; it should stay removed.`);
+  assert.deepEqual(await snapshot(root), beforeNoop); results.push('repeat-removal-noop');
+  }
+  await turn('fresh session child view', 'Use petry:get-asset-data. Show only W-1 own notes with its saved attachments, all dates including undated, in the evaluation host artifact.', true);
+  assertRollup(await artifact(), await observations(root), entities, wellRef, 'direct');
+  assert.equal((await artifact()).activity.length, 2); results.push('fresh-session-reload-and-child-isolation');
+  const pdfAttachment = current.petry.attachments.find(x => x.location.path === 'documents/review.pdf');
+  await turn('edit caption', `Use petry:capture. On observation ${current.uuid}, change attachment ${pdfAttachment.attachment_id}'s caption to exactly "Engineering sign-off pending". Keep every other field and attachment unchanged.`);
+  const beforeCaption = current;
+  current = assertAttachmentRevision(beforeCaption, await observations(root), 3);
+  const edited = current.petry.attachments.find(x => x.attachment_id === pdfAttachment.attachment_id);
+  assert.equal(edited.caption, 'Engineering sign-off pending');
+  assert.equal(edited.revision, pdfAttachment.revision + 1);
+  assertRollup(await artifact(), await observations(root), entities, wellRef, 'direct');
+  await turn('add to existing capture', `Use petry:capture. Attach documents/review.pdf to observation ${current.uuid} as a second, distinct evidence item named "Additional review" with caption "Independent supporting reference". Keep its original PDF attachment too. Do not change the note text.`);
+  current = assertAttachmentRevision(current, await observations(root), 4);
+  assert.equal(current.petry.attachments.filter(x => x.location.path === 'documents/review.pdf').length, 2);
+  assertRollup(await artifact(), await observations(root), entities, wellRef, 'direct');
+  results.push('caption-edit-and-add-to-existing-capture');
+  const beforeCycle = await snapshot(root);
+  await turn('reject cycle', 'Use petry:manage-assets. Add a contains link from W-1 to Falcon.');
+  assert.deepEqual(await snapshot(root), beforeCycle); results.push('cycle-rejected');
+  const beforeUnsafe = await snapshot(root);
+  await turn('reject unsafe path', `Use petry:capture. Attach ../outside.pdf to observation ${current.uuid}.`);
+  assert.deepEqual(await snapshot(root), beforeUnsafe); results.push('unsafe-path-rejected');
+  const finalFiles = await snapshot(root);
+  for (const [path, hash] of Object.entries(initialFiles)) assert.equal(finalFiles[path], hash, `${path} changed`);
+  assert.deepEqual(await readFile(join(root, `.petry/attachments/${attachmentId}/1/inspection.png`)), await readFile(join(uploads, 'inspection.png')));
+  console.log(JSON.stringify({result: 'pass', model, effort, skillSha256, cases: results, workspace: root, evidence: uploads, total_cost_usd: transcripts.reduce((sum, x) => sum + (JSON.parse(x.stdout).total_cost_usd || 0), 0)}, null, 2));
+} catch (error) {
+  console.error(`Evidence: ${root}; transcripts: ${uploads}`); throw error;
+}

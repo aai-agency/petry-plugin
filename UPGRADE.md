@@ -151,3 +151,22 @@ back every template and verify its scope, default ownership, spec, revision, and
 archive state before claiming team availability. Do not upload local templates
 merely because a team MCP is connected, and do not treat shared defaults as local
 defaults until the user selects that workspace and requests the change.
+
+## Local entity scope and attachments
+
+Custom entity types retain canonical asset IDs. Parent scope is an explicit read
+traversal over contains/parent_of; it does not fabricate Graphiti endpoints or
+transitive edges. The shared service must expose actual entity and relationship
+capabilities before transferring them.
+
+`petry.attachments` is an additive observation-v2 extension. Older records without
+it read as an empty list; no automatic rewrite is required. Preserve this list
+and unknown nested fields on corrections and transfers. `episodes` continues to
+mean real Graphiti episode IDs. Never substitute attachment IDs or paths for it.
+
+A local attachment path is not usable by a remote graph automatically. Transfer
+requires an authorized binary-upload/object capability plus stable resource/version
+references and read-back verification. If unavailable, keep the local attachment
+and disclose that it was not transferred; do not claim full evidence migration.
+An attachment removal unlinks current evidence while historical records and bytes
+remain. Permanent file erasure requires a separately scoped explicit request.

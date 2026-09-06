@@ -78,7 +78,7 @@ test("range example preserves calendar precision and separates knowledge time", 
 test("dependency example binds to the record and separates loaded and visible scope", () => {
   const record = observation(retrieval);
   const manifest = jsonExamples(retrieval).find((value) =>
-    Object.hasOwn(value, "consumes_insights"),
+    Object.hasOwn(value, "consumes_insights") && value.observation_uuids?.includes(record.uuid),
   );
   assert.ok(manifest);
   assert.equal(manifest.consumes_insights, true);

@@ -51,3 +51,47 @@ This does **not** prove native Cowork rendering, library component behavior,
 dialogs, zoom, or live UI-state preservation. Run the separate native acceptance
 protocol for those surfaces. The adapter tests the model-mediated storage,
 applicability, and refresh projection that precede rendering.
+
+## Entity and attachment lifecycle
+
+Run `pnpm eval:entities` for the working-tree plugin. It creates disposable projects
+and real PNG/PDF/PowerPoint/opaque fixtures. A resumed Claude agent creates custom
+entities and a diamond hierarchy, captures multi-subject notes and files, imports
+a binary upload, builds the parent projection, replaces/removes evidence, retries
+removal, and reloads in a fresh session. It also attempts a cycle and an unsafe
+path. Independent oracles check resulting records, membership, history, unchanged
+input bytes, and the artifact projection.
+
+This harness additionally grants `Bash(uuidgen)` for host-generated IDs and
+`Bash(cp:*)` solely for an explicit binary upload
+fixture copy; it pre-creates the managed destination. This is a tool grant, not an
+OS sandbox. Use only trusted working-tree skills. The fixture PowerPoint is a
+minimal empty presentation, the PDF a blank page, and the image a tiny PNG; the
+eval verifies file preservation, not content extraction or visual preview quality.
+
+Override the CLI/model/budget with the same environment variables as the original
+harness. Default ceiling is $1.50 per turn. It retains both the project and an
+upload/evidence directory, including transcripts, and prints their paths.
+Contract tests assert agreement among independently loaded skills; oracle mutation
+tests verify that the evaluators reject deliberately incorrect outcomes. Neither
+kind of deterministic test alone proves stochastic agent behavior.
+
+For a focused retest after a failed edit, `PETRY_EVAL_SEED_PROJECT=/path/to/retained-project
+pnpm eval:entities` builds a NEW disposable pre-edit fixture from that run's four
+original captures and entities, then runs overview/edit/recovery cases. The earlier
+run is never modified. Its result is explicitly labeled seeded-existing-project
+and is not evidence of another creation/upload run. Use only harness-generated
+fixtures with this option. The default still runs creation and upload from scratch.
+The extended generator-backed eval expects the host's uuidgen command.
+
+The extended suite defaults to Sonnet with high reasoning effort (override with
+`PETRY_EVAL_EFFORT`); the original capture-only suite retains
+Haiku. `PETRY_EVAL_MODEL=haiku` remains available as a stress configuration, but
+its observed failures must not be described as passing release evidence. Results
+are model-specific.
+
+`PETRY_EVAL_CONTINUE_PROJECT=/path/to/a/post-removal-run pnpm eval:entities` copies
+that run's entities, captures, and attachments into another disposable project,
+then tests fresh-session retrieval, caption/add operations, cycles, and invalid
+paths. It preserves the earlier failure evidence and labels the result as a
+continuation, not a full clean-start run. Use one continuation/seed mode at a time.
