@@ -1,0 +1,23 @@
+{
+  "result": "pass",
+  "model": "sonnet",
+  "effort": "high",
+  "skillSha256": {
+    "manage-assets": "0885ffd0858dedc9abd21b68422fce4f36f7ec18ae378f6a4a17bd7246cc6d5e",
+    "capture": "dab2e3b9faec12cdb112be2a322da84a220d1883a5780062767ab7ae46e14119",
+    "get-asset-data": "1f58ea5a95c4493f797597c03951a3ce44e0d30e635a0243e8802334e6b7b9a0"
+  },
+  "cases": [
+    "binary-upload-and-multiple-file-types",
+    "parent-diamond-multi-subject-dedup-and-unrelated-exclusion",
+    "replace-remove-history-and-parent-refresh",
+    "repeat-removal-noop",
+    "fresh-session-reload-and-child-isolation",
+    "caption-edit-and-add-to-existing-capture",
+    "cycle-rejected",
+    "unsafe-path-rejected"
+  ],
+  "total_cost_usd": 4.1419578,
+  "completed_turns": 12,
+  "boundary": "Headless Claude with file-backed artifact adapter; native Cowork previews are not validated."
+}

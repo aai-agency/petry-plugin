@@ -14,12 +14,17 @@
 ## Checklist
 - [x] Shared entity and attachment contracts across all three skills
 - [x] Regression and behavioral tests
-- [ ] Real agent evaluation of custom hierarchy and attachment lifecycle
+- [x] Real agent evaluation of custom hierarchy and attachment lifecycle
 - [x] Documentation and upgrade compatibility
-- [ ] Review final diff, push feature branch, open PR
+- [x] Review final diff, push feature branch, open PR
 
 ## Verification
-Pending. Native Cowork binary upload/preview is a separate host acceptance surface;
+Final clean-start Sonnet/high evaluation passed all 12 turns and eight scenario
+groups. All three loaded skill hashes match the committed source. 37 deterministic
+tests and Linux/Windows CI pass. See [structured result](entities-and-attachments-eval.json).
+PR: https://github.com/aai-agency/petry-plugin/pull/20.
+
+Native Cowork binary upload/preview is a separate host acceptance surface;
 headless tests must not be described as native UI evidence.
 
 ## Hardening evidence
@@ -83,3 +88,14 @@ headless tests must not be described as native UI evidence.
   still requires every stored attachment field verbatim, permits derived display
   metadata, and rejects altered authoritative fields. The retained output passed
   revalidation without any data edits. A final clean run uses this oracle.
+
+## Final result
+
+Clean-start `pnpm eval:entities`: PASS with Sonnet/high, 12 turns, all eight
+scenario groups. CLI-reported cost: $4.1419578. Current skill hashes were checked
+against the run. The actual working-tree Skill paths were verified in Claude's
+session log. The continuation and earlier failures remain separate evidence.
+
+No plugin version bump, marketplace release, or installed-plugin update was
+performed. This PR implements the local workflow; native Cowork preview behavior
+and real connector attachment retrieval are not claimed as tested here.
