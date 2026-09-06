@@ -34,8 +34,13 @@ Before building or reporting an overview:
    local graph: follow ONLY outgoing contains and parent_of edges for membership.
    related_to, analyzes, and other links do not add members. For a parent include
    the root itself. Deduplicate shared children.
-2. Load matching current observations once by UUID, preserving original subjects
-   and petry.attachments; never inherit parent notes into a direct child view.
+2. Search canonical refs and assigned aliases across ALL Markdown files in both
+   .petry/vault and .petry/insights, then parse matching candidates and select by
+   petry.asset_refs. Never restrict a direct view to that entity's filename/header.
+   "Own notes" means the entity is an explicit subject: a note filed under Base
+   with asset_refs [Base, W-1] MUST appear in W-1's direct view too. This does not
+   inherit a parent-only note. Load matching current observations once by UUID,
+   preserving original subjects and petry.attachments.
 3. Record BOTH full loaded_asset_refs and entity_scope in petry_dependencies.
    entity_scope must include root_asset_refs, mode, relationship_types,
    include_archived, and membership with actual asset_ref/revision pairs.

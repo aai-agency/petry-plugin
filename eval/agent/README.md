@@ -83,3 +83,14 @@ run is never modified. Its result is explicitly labeled seeded-existing-project
 and is not evidence of another creation/upload run. Use only harness-generated
 fixtures with this option. The default still runs creation and upload from scratch.
 The extended generator-backed eval expects the host's uuidgen command.
+
+The extended suite defaults to Sonnet; the original capture-only suite retains
+Haiku. `PETRY_EVAL_MODEL=haiku` remains available as a stress configuration, but
+its observed failures must not be described as passing release evidence. Results
+are model-specific.
+
+`PETRY_EVAL_CONTINUE_PROJECT=/path/to/a/post-removal-run pnpm eval:entities` copies
+that run's entities, captures, and attachments into another disposable project,
+then tests fresh-session retrieval, caption/add operations, cycles, and invalid
+paths. It preserves the earlier failure evidence and labels the result as a
+continuation, not a full clean-start run. Use one continuation/seed mode at a time.

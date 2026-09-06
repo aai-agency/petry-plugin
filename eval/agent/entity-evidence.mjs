@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, writeFile, copyFile, cp } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, copyFile, cp, appendFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const root = await mkdtemp(join(tmpdir(), 'petry-entity-evidence-'));
 const uploads = await mkdtemp(join(tmpdir(), 'petry-upload-'));
-const model = process.env.PETRY_EVAL_MODEL || 'haiku';
+const model = process.env.PETRY_EVAL_MODEL || 'sonnet';
 const transcripts = []; let session = randomUUID(); let first = true;
 const results = [];
 const skillSha256 = Object.fromEntries(await Promise.all(['manage-assets', 'capture', 'get-asset-data'].map(async name => [name, createHash('sha256').update(await readFile(join(repo, 'skills', name, 'SKILL.md'))).digest('hex')])));
@@ -40,24 +40,41 @@ await mkdir(join(root, 'documents'), {recursive: true});
 await mkdir(dirname(artifactFile), {recursive: true});
 for (const file of ['review.pdf', 'review.pptx', 'opaque.bin']) await copyFile(join(here, 'fixtures', file), join(root, 'documents', file));
 await copyFile(join(here, 'fixtures/inspection.png'), join(uploads, 'inspection.png'));
+const continuation = process.env.PETRY_EVAL_CONTINUE_PROJECT;
 const seed = process.env.PETRY_EVAL_SEED_PROJECT;
+assert.ok(!(seed && continuation), 'Choose either a seed or a continuation project');
+const continuationRecords = continuation ? await observations(continuation) : [];
 const seedRecords = seed ? (await observations(seed)).filter(x => !(x.petry.supersedes?.length)).map(x => ({...x, expired_at: null})) : [];
 const seedCurrent = seedRecords.find(x => x.fact === 'Engineering review supports the base case.');
-const attachmentId = seedCurrent?.petry.attachments.find(x => x.location.kind === 'managed_file')?.attachment_id || randomUUID();
+const attachmentId = [...continuationRecords, ...(seedCurrent ? [seedCurrent] : [])].flatMap(x => x.petry.attachments ?? []).find(x => x.location.kind === 'managed_file')?.attachment_id || randomUUID();
 for (const revision of [1, 2]) await mkdir(join(root, '.petry/attachments', attachmentId, String(revision)), {recursive: true});
 const initialFiles = await snapshot(root);
 try {
   let entities, records, current, falconRef, wellRef;
   const entity = name => entities.find(x => x.name === name);
+  if (continuation) {
+    // Preserve prior evidence: copy a post-removal project into a NEW workspace.
+    for (const directory of ['assets', 'vault', 'attachments']) await cp(join(continuation, '.petry', directory), join(root, '.petry', directory), {recursive: true});
+    entities = await readEntities(root); records = await observations(root);
+    falconRef = entity('Falcon').ref; wellRef = entity('W-1').ref;
+    current = records.find(x => !x.expired_at && x.fact === 'Engineering review supports the base case.');
+    assert.ok(current); assert.equal(current.petry.attachments.length, 3);
+    await assertLocalAttachments(root, current);
+    results.push('continued-after-removal-in-new-project');
+  } else {
   if (seed) {
     // Prepare a NEW disposable pre-edit fixture from retained original captures.
     // Never mutate the earlier run or describe this as another creation/upload run.
     assert.equal(seedRecords.length, 4, 'seed requires four original captures');
     await cp(join(seed, '.petry/assets'), join(root, '.petry/assets'), {recursive: true});
     await mkdir(join(root, '.petry/vault'), {recursive: true});
+    const seededFiles = new Set();
     for (const record of seedRecords) {
       const id = record.petry.asset_refs[0].replace('asset:', '');
-      await writeFile(join(root, '.petry/vault', `${id}.md`), `# Fixture\n\n<!-- petry:asset ref="asset:${id}" slug="${id}" -->\n\n## Observations\n\n- ${record.fact}\n\n<!-- petry:observation schema="2" -->\n\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\`\n`);
+      assert.match(id, /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i);
+      if (!seededFiles.has(id)) await writeFile(join(root, '.petry/vault', `${id}.md`), `# Fixture\n\n<!-- petry:asset ref="asset:${id}" slug="${id}" -->\n\n## Observations\n\n`);
+      seededFiles.add(id);
+      await appendFile(join(root, '.petry/vault', `${id}.md`), `- ${record.fact}\n\n<!-- petry:observation schema="2" -->\n\`\`\`json\n${JSON.stringify(record, null, 2)}\n\`\`\`\n`);
     }
     current = seedCurrent; records = seedRecords;
     await copyFile(join(seed, current.petry.attachments.find(x => x.location.kind === 'managed_file').location.path), join(root, `.petry/attachments/${attachmentId}/1/inspection.png`));
@@ -98,6 +115,7 @@ try {
   const beforeNoop = await snapshot(root);
   await turn('repeat removal', `Use petry:capture. Remove attachment ${attachmentId} again from observation ${current.uuid}; it should stay removed.`);
   assert.deepEqual(await snapshot(root), beforeNoop); results.push('repeat-removal-noop');
+  }
   await turn('fresh session child view', 'Use petry:get-asset-data. Show only W-1 own notes with its saved attachments, all dates including undated, in the evaluation host artifact.', true);
   assertRollup(await artifact(), await observations(root), entities, wellRef, 'direct');
   assert.equal((await artifact()).activity.length, 2); results.push('fresh-session-reload-and-child-isolation');

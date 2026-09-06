@@ -56,3 +56,12 @@ headless tests must not be described as native UI evidence.
 - A focused Haiku retest included a related_to entity in descendant scope. The
   oracle rejected it. Re-emphasized the exact membership relation whitelist and
   began a separate Sonnet full lifecycle; model results must stay distinct.
+- Sonnet passed creation, binary upload, parent rollup, replacement with refresh,
+  unlink with retained original bytes, and byte-identical repeated removal.
+- Its first fresh-session direct well view missed a joint well/case note stored
+  in the case file. Retrieval now explicitly searches all vault/legacy Markdown
+  by canonical refs, including multi-subject notes outside the primary file.
+- A fresh Sonnet continuation on a copied post-removal project passed the fixed
+  direct lookup and caption revision/refresh checks. Remaining checks in flight.
+- Extended eval default is Sonnet. Haiku runs are retained as failed stress
+  evidence, not hidden or counted as passing release verification.
