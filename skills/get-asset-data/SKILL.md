@@ -64,6 +64,46 @@ Before building or reporting an overview:
 5. Read back the finished scope and displayed observations; reconcile omissions,
    duplicate UUIDs, stale attachments, or unrelated notes before claiming success.
 
+### Required private artifact manifest
+
+Start EVERY new insight-consuming artifact's petry_dependencies from this complete
+shape. Fill actual values; do not replace it with a shorter custom structure,
+rename keys to filters/date_range, or omit fields. The values below describe an
+all-dates parent view only; set actual requested scope, dates, types, and identity.
+Never persist placeholder strings. The manifest is private, never visible UI.
+
+```json
+{
+  "schema_version": 1,
+  "artifact_id": "REPLACE_WITH_ACTUAL_ARTIFACT_ID",
+  "project_identity": "REPLACE_WITH_ACTUAL_CONNECTED_PROJECT_IDENTITY",
+  "consumes_insights": true,
+  "entity_scope": {
+    "root_asset_refs": [],
+    "mode": "descendants",
+    "relationship_types": ["contains", "parent_of"],
+    "include_archived": false,
+    "membership": []
+  },
+  "loaded_asset_refs": [],
+  "loaded_world_window": {"from": null, "to": null, "precision": "unknown", "timezone": null},
+  "includes_undated": true,
+  "observation_types": ["note", "decision", "event", "measurement", "correction", "instruction", "preference"],
+  "knowledge_view": {"mode": "current", "as_of": null},
+  "observation_uuids": [],
+  "insight_fields_used": ["fact", "valid_at", "invalid_at", "petry.asset_refs", "petry.type", "petry.source", "petry.attachments"],
+  "derived_dependencies": []
+}
+```
+
+Populate membership with actual {asset_ref, revision} entries, root_asset_refs
+with the actual root, and loaded_asset_refs with the complete visited scope and
+assigned aliases. For direct views use mode direct and relationship_types [].
+Check every required key against this shape AFTER writing the artifact, as well
+as checking rendered notes. A correct-looking overview with missing project,
+artifact, scope, or date dependencies is not a completed artifact. Repair it
+before reporting success. A later capture must be able to read these exact keys.
+
 ## Persistent local identity contract
 
 At the start of each request, read the connected project's `.petry/sources.json`

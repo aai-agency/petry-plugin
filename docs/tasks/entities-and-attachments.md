@@ -13,9 +13,9 @@
 
 ## Checklist
 - [x] Shared entity and attachment contracts across all three skills
-- [ ] Regression and behavioral tests
+- [x] Regression and behavioral tests
 - [ ] Real agent evaluation of custom hierarchy and attachment lifecycle
-- [ ] Documentation and upgrade compatibility
+- [x] Documentation and upgrade compatibility
 - [ ] Review final diff, push feature branch, open PR
 
 ## Verification
@@ -65,3 +65,16 @@ headless tests must not be described as native UI evidence.
   direct lookup and caption revision/refresh checks. Remaining checks in flight.
 - Extended eval default is Sonnet. Haiku runs are retained as failed stress
   evidence, not hidden or counted as passing release verification.
+- Sonnet continuation PASSED all five turns on final skill hashes: fresh direct
+  retrieval, caption edit, add another evidence item, reject cycle, reject unsafe
+  path. Evidence: /var/folders/_d/bj61wtqs4xd8qf3mj6fqmk5c0000gn/T/petry-upload-g9Pxc2;
+  project: /var/folders/_d/bj61wtqs4xd8qf3mj6fqmk5c0000gn/T/petry-entity-evidence-7kojk8.
+  Cost reported by CLI: $1.5950286. This is continuation evidence, not a clean run.
+- Final clean-start Sonnet lifecycle on the finished skills is now running.
+- A subsequent low-effort clean Sonnet run still produced a partial private
+  manifest. Added a complete required manifest template at the start of retrieval
+  and made the release-default eval Sonnet/high ($1.50 per-turn ceiling). No
+  oracle criteria were relaxed. The old filled-example test now selects its
+  concrete observation-bound example rather than the new blank template.
+- Inspected the real Claude session log: Skill loads point to this worktree,
+  including the new manifest template, not a stale installed plugin.

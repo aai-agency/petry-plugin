@@ -70,7 +70,7 @@ minimal empty presentation, the PDF a blank page, and the image a tiny PNG; the
 eval verifies file preservation, not content extraction or visual preview quality.
 
 Override the CLI/model/budget with the same environment variables as the original
-harness. Default ceiling is $0.80 per turn. It retains both the project and an
+harness. Default ceiling is $1.50 per turn. It retains both the project and an
 upload/evidence directory, including transcripts, and prints their paths.
 Contract tests assert agreement among independently loaded skills; oracle mutation
 tests verify that the evaluators reject deliberately incorrect outcomes. Neither
@@ -84,7 +84,8 @@ and is not evidence of another creation/upload run. Use only harness-generated
 fixtures with this option. The default still runs creation and upload from scratch.
 The extended generator-backed eval expects the host's uuidgen command.
 
-The extended suite defaults to Sonnet; the original capture-only suite retains
+The extended suite defaults to Sonnet with high reasoning effort (override with
+`PETRY_EVAL_EFFORT`); the original capture-only suite retains
 Haiku. `PETRY_EVAL_MODEL=haiku` remains available as a stress configuration, but
 its observed failures must not be described as passing release evidence. Results
 are model-specific.

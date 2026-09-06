@@ -12,6 +12,7 @@ const repo = resolve(here, '../..');
 const root = await mkdtemp(join(tmpdir(), 'petry-entity-evidence-'));
 const uploads = await mkdtemp(join(tmpdir(), 'petry-upload-'));
 const model = process.env.PETRY_EVAL_MODEL || 'sonnet';
+const effort = process.env.PETRY_EVAL_EFFORT || 'high';
 const transcripts = []; let session = randomUUID(); let first = true;
 const results = [];
 const skillSha256 = Object.fromEntries(await Promise.all(['manage-assets', 'capture', 'get-asset-data'].map(async name => [name, createHash('sha256').update(await readFile(join(repo, 'skills', name, 'SKILL.md'))).digest('hex')])));
@@ -21,7 +22,7 @@ async function turn(label, prompt, fresh = false) {
   if (fresh) {session = randomUUID(); first = true;}
   const args = ['-p', ...(first ? ['--session-id', session] : ['--resume', session]), '--plugin-dir', repo,
     '--append-system-prompt-file', join(here, 'entity-evidence-adapter.md'), '--permission-mode', 'acceptEdits', '--permission-prompts', 'none',
-    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', 'low', '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '0.80', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
+    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', effort, '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '1.50', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
   first = false;
   const response = await new Promise((ok, reject) => {
     const child = spawn(process.env.PETRY_EVAL_CLAUDE_BIN || 'claude', args, {cwd: root, stdio: ['ignore', 'pipe', 'pipe']});
@@ -141,7 +142,7 @@ try {
   const finalFiles = await snapshot(root);
   for (const [path, hash] of Object.entries(initialFiles)) assert.equal(finalFiles[path], hash, `${path} changed`);
   assert.deepEqual(await readFile(join(root, `.petry/attachments/${attachmentId}/1/inspection.png`)), await readFile(join(uploads, 'inspection.png')));
-  console.log(JSON.stringify({result: 'pass', model, skillSha256, cases: results, workspace: root, evidence: uploads, total_cost_usd: transcripts.reduce((sum, x) => sum + (JSON.parse(x.stdout).total_cost_usd || 0), 0)}, null, 2));
+  console.log(JSON.stringify({result: 'pass', model, effort, skillSha256, cases: results, workspace: root, evidence: uploads, total_cost_usd: transcripts.reduce((sum, x) => sum + (JSON.parse(x.stdout).total_cost_usd || 0), 0)}, null, 2));
 } catch (error) {
   console.error(`Evidence: ${root}; transcripts: ${uploads}`); throw error;
 }
