@@ -315,3 +315,16 @@ and cycles. The test-only file-backed adapters do not replace native Cowork
 visual testing.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
+
+### Insight attachment presentation
+
+Default and custom templates share one insight-detail behavior: summaries, chart
+annotations, and entity notes lead to the full note and its evidence. Details
+include attachment thumbnails where safely supported, captions, and original-file
+Open/Download actions. Unsupported previews use a file-type tile. Missing or
+blocked access must be explained rather than presented as a working button.
+
+Host support must be tested: this instruction-only plugin cannot itself grant a
+hosted artifact access to local files. A private artifact may need derived copies
+of evidence to provide previews/downloads; those copies are hosted with the
+artifact while canonical records and originals stay in the local project.

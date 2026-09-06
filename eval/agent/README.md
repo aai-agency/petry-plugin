@@ -95,3 +95,28 @@ that run's entities, captures, and attachments into another disposable project,
 then tests fresh-session retrieval, caption/add operations, cycles, and invalid
 paths. It preserves the earlier failure evidence and labels the result as a
 continuation, not a full clean-start run. Use one continuation/seed mode at a time.
+
+### Native attachment UI acceptance
+
+The file-backed agent adapter does not verify thumbnails, browser downloads, or
+host file viewers. Test these in the actual target host before claiming the
+attachment UI works. Use a disposable project with known PNG, PDF, presentation,
+and unsupported-format bytes; include a missing reference and an attachment
+replacement. Record expected original SHA-256 values outside the project.
+
+1. Open the same shared insight from a summary, a parent view, and an individual
+   entity view. Each entry must show identical current evidence and full friendly
+   details, including when a custom template is selected.
+2. Activate an image thumbnail and verify the real image preview; close with
+   Escape and check keyboard focus returns to the triggering control.
+3. Exercise Open and Download for each available file. Compare downloaded bytes
+   and filenames with the originals. A screenshot, tile, or href alone cannot pass.
+4. Check missing/access-denied files have an accurate explanation and recovery
+   action, while unsupported preview still permits a working original download.
+5. Replace or unlink evidence through capture, refresh the same artifact, and
+   confirm current details and previews no longer show the stale attachment.
+   Historical records and original files must remain intact.
+
+Record host/version, installed versus candidate guidance, artifact identity,
+actual click/download evidence, and any failed capability separately. A local
+browser pass is not a native Cowork download pass.
