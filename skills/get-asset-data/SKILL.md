@@ -37,6 +37,15 @@ Before building or reporting an overview:
 3. Record BOTH full loaded_asset_refs and entity_scope in petry_dependencies.
    entity_scope must include root_asset_refs, mode, relationship_types,
    include_archived, and membership with actual asset_ref/revision pairs.
+   root_asset_refs belongs INSIDE entity_scope, not only at manifest top level.
+   Use dependency schema_version 1 (independent of observation schema version 2).
+   An all-dates request uses loaded_world_window.from/to = null; include undated
+   insights with includes_undated: true when requested or displayed. Never turn
+   capture time into a world-date filter or write a zero-length date window.
+   The manifest must describe the actual displayed and selectable records: an
+   undated insight visible in activity cannot have includes_undated: false.
+   Evidence cards require consumes_insights: true and petry.attachments in
+   insight_fields_used. Read these values back before reporting success.
    A parent artifact missing entity_scope is incomplete: fix and read back the
    manifest before reporting success. Legacy standalone views remain readable.
 4. Verify attachment availability through actual host capabilities. Show real

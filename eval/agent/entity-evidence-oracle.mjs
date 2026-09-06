@@ -36,6 +36,13 @@ export function scopeFor(entities, rootRef, mode = 'descendants') {
 
 export function assertRollup(artifact, records, entities, rootRef, mode = 'descendants') {
   const refs = scopeFor(entities, rootRef, mode);
+  assert.equal(artifact.petry_dependencies.schema_version, 1);
+  assert.equal(artifact.petry_dependencies.consumes_insights, true);
+  assert.equal(artifact.petry_dependencies.includes_undated, true);
+  assert.equal(artifact.petry_dependencies.loaded_world_window.from, null);
+  assert.equal(artifact.petry_dependencies.loaded_world_window.to, null);
+  assert.ok(artifact.petry_dependencies.insight_fields_used.includes('petry.attachments'));
+  assert.deepEqual(artifact.petry_dependencies.entity_scope.root_asset_refs, [rootRef]);
   assert.deepEqual([...artifact.petry_dependencies.loaded_asset_refs].sort(), refs);
   assert.equal(artifact.petry_dependencies.entity_scope.mode, mode);
   const expected = records.filter(x => !x.expired_at && x.petry.asset_refs.some(ref => refs.includes(ref)));

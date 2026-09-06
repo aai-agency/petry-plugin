@@ -34,3 +34,12 @@ headless tests must not be described as native UI evidence.
   cycles, scope leakage, duplicate rollups, damaged history, and unsafe paths.
 - Binary fixture validation found and repaired a bad PNG CRC; final fixture is a
   valid generated RGBA PNG. PDF and PowerPoint fixtures are minimal containers.
+- A retained parent artifact used the valid activity[].observation wrapper. The
+  first oracle incorrectly rejected it; normalization now accepts direct records
+  or that wrapper while still checking subjects, evidence, and deduplication.
+- A live replacement saved correct history and attachment revision but skipped
+  parent refresh because the artifact falsely set includes_undated=false and a
+  zero-length date window. Added early manifest consistency checks and negative
+  oracle coverage; all-dates views retain null bounds and undated inclusion.
+- Windows CI exposed CRLF parsing in the new contract test. Normalized line
+  endings and marked binary fixtures -text; Linux and Windows CI then passed.
