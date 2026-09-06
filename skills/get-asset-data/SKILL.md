@@ -31,13 +31,19 @@ shared data or upload local observations just because a connector is available.
 
 Before building or reporting an overview:
 1. Resolve the requested entity and the direct/descendant scope from the explicit
-   local graph. For a parent include the root itself. Deduplicate shared children.
+   local graph: follow ONLY outgoing contains and parent_of edges for membership.
+   related_to, analyzes, and other links do not add members. For a parent include
+   the root itself. Deduplicate shared children.
 2. Load matching current observations once by UUID, preserving original subjects
    and petry.attachments; never inherit parent notes into a direct child view.
 3. Record BOTH full loaded_asset_refs and entity_scope in petry_dependencies.
    entity_scope must include root_asset_refs, mode, relationship_types,
    include_archived, and membership with actual asset_ref/revision pairs.
    root_asset_refs belongs INSIDE entity_scope, not only at manifest top level.
+   The manifest MUST also include project_identity from the actual connected
+   project and artifact_id matching this artifact. These are required even for
+   a source-free local overview: without project identity later capture cannot
+   safely identify the artifact. Never omit them or invent their values.
    Use dependency schema_version 1 (independent of observation schema version 2).
    An all-dates request uses loaded_world_window.from/to = null; include undated
    insights with includes_undated: true when requested or displayed. Never turn

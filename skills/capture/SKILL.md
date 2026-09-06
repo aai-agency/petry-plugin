@@ -28,8 +28,17 @@ Before claiming a save, verify these invariants from disk:
   exact attachment payload read back. A chat upload is not durable by itself.
 - Add/edit/replace/remove attachments through a successor observation; keep the
   prior attachment list intact in the expired version. Preserve exact fact text.
+  Set the successor's created_at AND petry.captured_at to the actual mutation UTC
+  time, and predecessor.expired_at to that same time. Do not copy the old
+  petry.captured_at into the new version; reference_time is a separate source time.
 - Apply parent scope through explicit contains/parent_of traversal and UUID
   deduplication. Do not copy a well note into its parent's vault file.
+- After every successful attachment mutation, inspect accessible artifacts and
+  perform the applicable refresh before finishing. A changed attachment list
+  affects an evidence-consuming view even when fact text and dates are unchanged.
+  Parent views match by loaded descendant refs, not only by the parent name.
+  Report both the saved capture AND whether the same artifact refreshed; if
+  it could not refresh, give the actual reason. Never silently stop after saving.
 - A failed verification is not success; reconcile the newly written record
   before refreshing or reporting completion. Never alter unrelated records.
 

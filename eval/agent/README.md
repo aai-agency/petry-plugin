@@ -75,3 +75,11 @@ upload/evidence directory, including transcripts, and prints their paths.
 Contract tests assert agreement among independently loaded skills; oracle mutation
 tests verify that the evaluators reject deliberately incorrect outcomes. Neither
 kind of deterministic test alone proves stochastic agent behavior.
+
+For a focused retest after a failed edit, `PETRY_EVAL_SEED_PROJECT=/path/to/retained-project
+pnpm eval:entities` builds a NEW disposable pre-edit fixture from that run's four
+original captures and entities, then runs overview/edit/recovery cases. The earlier
+run is never modified. Its result is explicitly labeled seeded-existing-project
+and is not evidence of another creation/upload run. Use only harness-generated
+fixtures with this option. The default still runs creation and upload from scratch.
+The extended generator-backed eval expects the host's uuidgen command.

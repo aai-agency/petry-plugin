@@ -48,3 +48,11 @@ headless tests must not be described as native UI evidence.
   generator, and the live evaluator exposes only uuidgen plus scoped fixture
   copying as shell capabilities. This keeps ID generation deterministic when
   the host provides it, without shipping a plugin runtime.
+- Another valid capture replacement did not refresh because the generated parent
+  manifest omitted project_identity. Required both actual project/artifact identity
+  in the early overview checklist and oracle; capture now explicitly reports its
+  refresh outcome after evidence mutations. Also retained correct successor
+  knowledge/capture timestamps in the early save checklist.
+- A focused Haiku retest included a related_to entity in descendant scope. The
+  oracle rejected it. Re-emphasized the exact membership relation whitelist and
+  began a separate Sonnet full lifecycle; model results must stay distinct.

@@ -37,6 +37,9 @@ export function scopeFor(entities, rootRef, mode = 'descendants') {
 export function assertRollup(artifact, records, entities, rootRef, mode = 'descendants') {
   const refs = scopeFor(entities, rootRef, mode);
   assert.equal(artifact.petry_dependencies.schema_version, 1);
+  assert.equal(typeof artifact.petry_dependencies.project_identity, 'string');
+  assert.ok(artifact.petry_dependencies.project_identity.length > 0);
+  assert.equal(artifact.petry_dependencies.artifact_id, artifact.artifact_id);
   assert.equal(artifact.petry_dependencies.consumes_insights, true);
   assert.equal(artifact.petry_dependencies.includes_undated, true);
   assert.equal(artifact.petry_dependencies.loaded_world_window.from, null);
@@ -63,6 +66,8 @@ export function assertAttachmentRevision(before, records, count) {
   assert.deepEqual({...old, expired_at: before.expired_at}, before, 'history altered');
   const next = records.find(x => !x.expired_at && x.petry.supersedes?.includes(before.uuid));
   assert.ok(next, 'missing successor');
+  assert.equal(next.created_at, old.expired_at, 'successor knowledge time');
+  assert.equal(next.petry.captured_at, next.created_at, 'local successor capture time');
   for (const key of ['fact', 'valid_at', 'invalid_at', 'fact_embedding']) assert.deepEqual(next[key], before[key]);
   assert.deepEqual(next.petry.asset_refs, before.petry.asset_refs);
   assert.equal(next.petry.type, before.petry.type);
