@@ -89,6 +89,7 @@ Use `/manage-assets` (or say “Use petry:manage-assets”) to set up local memo
   assets/<id>.json   stable identities, properties, source bindings, relationships
   templates/<id>.json reusable presentation specs by asset type and view type
   vault/*.md         observations and revision history
+  attachments/<id>/<revision>/ immutable uploaded evidence
 ```
 
 Setup/edit requests authorize the corresponding local writes. Reads do not
@@ -126,6 +127,67 @@ are resolved from actual data or clarified when they conflict with another sourc
 link them. Local edits do not change external source data. Archived assets are
 excluded from default lists while remaining available for historical requests.
 Asset changes appear on the next data request; existing artifacts remain snapshots.
+
+## Entities, deals, and consolidated insights
+
+Entity and asset are the same saved identity. Suggested types include deal,
+well, facility, meter, and economics_case; users can supply their own types.
+No source or database is needed to create an entity.
+
+- “Create Falcon as a deal, and Research as type Research Basket.”
+- “Link Falcon contains North facility, and North contains W-1.”
+- “Capture this decision on Falcon: defer the bid until engineering review.”
+- “Capture this note on W-1 and the Base case together.”
+- “Show Falcon with consolidated insights from its children.”
+- “Show only W-1's own notes.”
+
+Parent overviews follow explicit contains/parent_of links through descendants.
+An insight appears once even when several children refer to it or a well belongs
+under several branches. Its original subjects stay visible. Other relationship
+types remain useful links without adding their targets to a parent summary.
+Child views do not inherit their parents' notes. Cyclic additions are rejected;
+incomplete existing relationships produce an explicitly partial view.
+
+Deal workspaces present the overview, linked entities, analysis cases, insights,
+and evidence. Save the layout as a template for the deal-workspace view, or
+customize templates for your own entity types. Case assumptions and numbers come
+from your sources and assertions. Separate seller/base/downside cases retain
+separate identities. Entity membership reflects current saved links; historical
+note views do not imply a historical snapshot of ownership.
+
+## Attach files to captures
+
+- “Capture this note on W-1 and attach this photo, PDF, and PowerPoint.”
+- “Attach documents/review.pdf, page 14, to that insight.”
+- “Replace the photo on that insight with this new image.”
+- “Change that attachment's caption to Inspection after repair.”
+- “Remove the PDF attachment from that insight.”
+
+Any file type the host can save can accompany an insight. Unsupported previews
+still appear as file cards. Reading or interpreting a document requires actual
+host support; registering a file does not mean Claude has analyzed it.
+
+Existing project files are referenced in place. Uploads and explicitly requested
+snapshots are copied byte-for-byte to `.petry/attachments/<id>/<revision>/` through
+the host's file tools. Temporary chat uploads must be persisted before a capture
+can promise to remember them. If the host cannot save binary files, it asks you
+to save the file into the connected project using the host's file controls.
+No database or paid MCP is required. Authorized connectors can optionally supply
+external evidence; these references do not create a local backup.
+
+Replacing, adding, editing, or removing an attachment creates a new insight
+version and preserves its predecessor. Removal unlinks the attachment from the
+current insight; originals and historical evidence remain. A repeated removal
+is a no-op. Files shared by other captures remain linked to those captures.
+An in-place project file can change or disappear; the interface reports missing
+files or detected changes rather than pretending historical bytes are available.
+
+Insight details show friendly attachment names, captions, and page/slide labels.
+Previews and open/download actions depend on host capabilities. Attachment edits
+refresh affected insight and parent views in the current conversation; a fresh
+session reloads the project. Existing views do not watch files or membership
+changes in the background. Local storage still uses the host's normal model
+processing; it does not mean offline inference.
 
 ## Remember artifact templates
 
@@ -246,6 +308,10 @@ the plugin cannot promise persistence of controls the host does not retain.
 Claude agent in a disposable project. Deterministic oracles verify the same
 artifact identity, relevant/unrelated/duplicate/correction behavior, vault
 history, and unchanged telemetry. See [eval/agent/README.md](eval/agent/README.md).
-The test-only file-backed adapter does not replace native Cowork visual testing.
+`pnpm eval:entities` runs a separate real-agent lifecycle for custom types,
+shared child relationships, multi-subject deduplication, binary upload, attachment
+replacement/removal, parent refresh, fresh-session retrieval, and rejected paths
+and cycles. The test-only file-backed adapters do not replace native Cowork
+visual testing.
 
 MIT © AAI Agency · [aai.agency](https://aai.agency) · husam@aai.agency
