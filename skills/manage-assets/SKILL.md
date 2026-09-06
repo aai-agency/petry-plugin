@@ -141,7 +141,15 @@ Asset record example, at `.petry/assets/<id>.json`:
 }
 ```
 
-Generate source and asset UUIDs once. Asset `id`, `ref` (`asset:` + id), filename,
+Generate source and asset UUIDs once using an actual host UUID generator when
+available (for example the operating system's uuidgen command); never compose
+IDs from names or copy examples. This is a host operation, not a plugin helper
+program or new runtime. Apply the same generation rule to observation UUIDs and
+attachment IDs. Validate generated/supplied UUID strings as exactly 36 characters,
+five hexadecimal groups of lengths 8-4-4-4-12 and exactly four hyphens. A malformed
+generated value must be regenerated before writing. A file-only host without a
+generator must still verify every group length and hexadecimal character before
+persisting an ID; never call an unchecked value a UUID. Asset `id`, `ref` (`asset:` + id), filename,
 and created_at are immutable; rename only name. Display names are not identities.
 An asset can exist without source_bindings, telemetry, or a database. A binding's
 capabilities must be a nonempty subset of its source's capabilities. Multiple

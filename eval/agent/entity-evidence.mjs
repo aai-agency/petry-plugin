@@ -21,7 +21,7 @@ async function turn(label, prompt, fresh = false) {
   if (fresh) {session = randomUUID(); first = true;}
   const args = ['-p', ...(first ? ['--session-id', session] : ['--resume', session]), '--plugin-dir', repo,
     '--append-system-prompt-file', join(here, 'entity-evidence-adapter.md'), '--permission-mode', 'acceptEdits', '--permission-prompts', 'none',
-    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*)', '--model', model, '--effort', 'low', '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '0.80', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
+    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', 'low', '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '0.80', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
   first = false;
   const response = await new Promise((ok, reject) => {
     const child = spawn(process.env.PETRY_EVAL_CLAUDE_BIN || 'claude', args, {cwd: root, stdio: ['ignore', 'pipe', 'pipe']});

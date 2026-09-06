@@ -43,3 +43,8 @@ headless tests must not be described as native UI evidence.
   oracle coverage; all-dates views retain null bounds and undated inclusion.
 - Windows CI exposed CRLF parsing in the new contract test. Normalized line
   endings and marked binary fixtures -text; Linux and Windows CI then passed.
+- A later run produced a six-group attachment ID despite textual validation
+  guidance. The shared identity contract now prefers the actual host UUID
+  generator, and the live evaluator exposes only uuidgen plus scoped fixture
+  copying as shell capabilities. This keeps ID generation deterministic when
+  the host provides it, without shipping a plugin runtime.

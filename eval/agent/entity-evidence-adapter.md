@@ -13,8 +13,9 @@ On a relevant capture update, refresh the same file and increment revision once.
 This tests storage/projection, not native UI rendering. No CSS or UI is needed.
 
 File upload handles in a request are explicit, authorized fixture imports.
-The host has Bash(cp:*) solely to copy the specified upload bytes to the exact
+The host exposes `uuidgen` through Bash(uuidgen) for fresh UUIDs. Use it when
+the skills require generated identities. The host also has Bash(cp:*) solely to copy the specified upload bytes to the exact
 managed attachment destination provided by the request. Destination directories
-already exist. Do not use Bash for any other purpose, read outside the connected
+already exist. Apart from uuidgen, do not use Bash for any other purpose, read outside the connected
 project except that upload handle, or execute uploaded content. Other operations
 use ordinary Read, Write, Edit, Glob, and Grep tools. Do not modify input files.

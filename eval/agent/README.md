@@ -62,7 +62,8 @@ removal, and reloads in a fresh session. It also attempts a cycle and an unsafe
 path. Independent oracles check resulting records, membership, history, unchanged
 input bytes, and the artifact projection.
 
-This harness additionally grants `Bash(cp:*)` solely for an explicit binary upload
+This harness additionally grants `Bash(uuidgen)` for host-generated IDs and
+`Bash(cp:*)` solely for an explicit binary upload
 fixture copy; it pre-creates the managed destination. This is a tool grant, not an
 OS sandbox. Use only trusted working-tree skills. The fixture PowerPoint is a
 minimal empty presentation, the PDF a blank page, and the image a tiny PNG; the
