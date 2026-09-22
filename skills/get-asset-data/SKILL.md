@@ -19,6 +19,21 @@ petry is an instruction-only skill. Retrieve the user's data dynamically and
 build the result with Claude's artifact capabilities. Do not look for,
 execute, copy, or create plugin helper programs, plugin-bundled templates, or renderers.
 
+## Sample data disclosure checklist
+
+Before creating ANY artifact, including a simple table or standalone HTML file,
+determine whether any displayed readings are generated sample data. When they
+are, put a prominent **Sample data** label inside the artifact above the readings.
+This is mandatory when sample generation is authorized; do not ask for separate
+permission to add the label. A sample asset name, filename, code comment, or
+conversation reply is not a disclosure inside the artifact.
+
+Before reporting completion, read back the saved/generated artifact and verify
+that the label is present in its visible content. If missing, fix it before
+finishing. Keep the label in saved/exported copies and identify generated series
+in mixed real/sample views. Artifacts with only real readings need no sample
+label. Sample generation itself still requires the user's explicit request.
+
 Local file retrieval needs no petry account, subscription, database, or MCP.
 Do not gate it on the optional paid team service. If the user selects a shared
 MCP source, resolve its actual workspace and authorized scope through its tools;

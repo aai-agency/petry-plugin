@@ -28,7 +28,7 @@ on main. The original checkout's untracked build directory is untouched.
 
 ## Verification
 
-- `pnpm check`: 60/60 tests pass, including negative mutation cases for incorrect
+- `pnpm check`: 63/63 tests pass, including negative mutation cases for incorrect
   facts/subjects, missing metadata, stale/future/invalid clocks, duplicate IDs,
   damaged history and lost as-of visibility.
 - `claude plugin validate .`: marketplace validation passes.
@@ -39,6 +39,15 @@ on main. The original checkout's untracked build directory is untouched.
   recorded at 18:41:57.099Z and expired at 18:43:42.524Z, matching the successor's
   creation time. See [structured evidence](robustness-review-eval.json).
 - Entity/attachment evaluation with the new per-turn clock checks: in progress.
+- Live sample fallback smoke: the initial late-section labeling fix still yielded
+  an unlabeled HTML table after the agent loaded the new skill. Added an early
+  mandatory disclosure/read-back checklist. `pnpm eval:sample` then passed with
+  Haiku/low: the saved HTML contains a styled Sample data label above the table,
+  despite no separate label request. Cost: $0.0884035. The extracted static oracle
+  also passes against that unchanged HTML and rejects metadata-only labels.
+- The capture and entity runs began before the final sample-only checklist
+  change. Capture, identity, and attachment contracts are unchanged; the final
+  retrieval hash is recorded separately in the sample evidence.
 
 Native Cowork UI is a separate acceptance surface; the headless adapter cannot
 prove browser rendering, sample-banner visibility, or attachment preview behavior.

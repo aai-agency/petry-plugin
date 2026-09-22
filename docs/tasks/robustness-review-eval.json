@@ -79,5 +79,16 @@
     }
   ],
   "total_cost_usd": 1.6471013999999997,
-  "boundary": "Headless file-backed artifact adapter; no native UI verification."
+  "boundary": "Headless file-backed artifact adapter; no native UI verification.",
+  "sample_disclosure": {
+    "result": "pass",
+    "model": "haiku",
+    "effort": "low",
+    "prompt": "Use petry:get-asset-data. Create a simple standalone HTML table with two sample pressure readings for meter M-SAMPLE and save it as result.html. No charts, aggregates, or captured insights are needed.",
+    "skillSha256": "f8ee592b4bb81b1a0e721c5e2fb1b0959edfd19bcf64ff0ff46636251efab1f2",
+    "htmlSha256": "e9532d11999ca4ad86c78be721ec4251d3e3f5134f71e25efaea35609be9fcef",
+    "total_cost_usd": 0.0884035,
+    "boundary": "Saved standalone HTML has a Sample data label above the table. Static content and source inspected; native Cowork rendering is not verified.",
+    "prior_attempt": "The first live sample output omitted the label despite loading the revised skill. Added an early disclosure/read-back checklist and retained that failure separately."
+  }
 }

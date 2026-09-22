@@ -60,6 +60,16 @@ isolated activation and no-plugin-baseline cases, but access is still gated as
 early access. Add that layer when it is enabled for the release environment.
 Its isolated cases will complement rather than replace this resumed lifecycle.
 
+## Sample disclosure fallback smoke check
+
+Run `pnpm eval:sample` to request a simple sample-data HTML table without asking
+for a label. A file-only host forces the documented standalone fallback. The
+check requires **Sample data** in body content before the readings, excluding
+comments/scripts/styles and the page title. It retains the HTML and transcript.
+This is a static content check, not browser/CSS or native Cowork visibility
+verification. It uses the same executable/model/budget overrides, defaults to
+Haiku/low with a $0.50 ceiling, and records the retrieval skill hash.
+
 This does **not** prove native Cowork rendering, library component behavior,
 dialogs, zoom, or live UI-state preservation. Run the separate native acceptance
 protocol for those surfaces. The adapter tests the model-mediated storage,
