@@ -99,7 +99,9 @@ test("asset data defines component-first artifacts without a plugin renderer", (
   assert.match(skill, /AI-generated operational summary/i);
   assert.match(skill, /Recompute the summary whenever group or filters\s+change/i);
   assert.match(skill, /Do not write generated summaries back to\s+the vault/i);
-  assert.match(skill, /No sample, mock, demo, or synthetic-data banner unless the user explicitly/i);
+  assert.match(skill, /label the generated artifact \*\*Sample data\*\* without requiring a separate/);
+  assert.match(skill, /Retain the disclosure in saved\/exported copies/);
+  assert.doesNotMatch(skill, /No sample, mock, demo, or synthetic-data banner unless/);
   assert.match(skill, /every petry product or brand label exactly as lowercase `petry`/i);
   assert.doesNotMatch(skill, /CLAUDE_(?:SKILL_DIR|PLUGIN_ROOT)|\.mjs|preview\.html/);
 });

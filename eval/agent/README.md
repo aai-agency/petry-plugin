@@ -25,7 +25,7 @@ model, or per-turn ceiling with `PETRY_EVAL_CLAUDE_BIN`, `PETRY_EVAL_MODEL`, and
 `PETRY_EVAL_TURN_BUDGET_USD`. Use `pnpm eval:agent -- --keep` to retain a passing
 temporary workspace. Failed workspaces and transcripts are always retained.
 
-The four sequential cases verify:
+The seven sequential cases verify:
 
 1. A relevant capture writes one complete v2 observation and updates the same
    artifact with the exact insight fields its dependency manifest consumes.
@@ -33,6 +33,19 @@ The four sequential cases verify:
 3. An exact duplicate changes no project bytes.
 4. An approved out-of-window correction preserves/links history and removes the
    old event from the same artifact while leaving telemetry unchanged.
+5. A measurement with the case-sensitive unit `mW` is captured exactly.
+6. A correction from `mW` to `MW` creates a new version instead of being
+   suppressed as a duplicate, retaining all unrelated files and artifacts.
+7. Repeating the corrected `MW` assertion is a byte-preserving no-op.
+
+Both runners provide a fresh host UTC timestamp on every turn and retain the
+actual start/end times in transcripts. New local observation times must fall
+inside that execution window. Corrections must expire the predecessor exactly
+when the successor is created, strictly after the predecessor's creation. The
+capture oracle checks the exact replacement fact, subjects, type, preserved
+graph/unknown metadata and evidence, fresh UUID, and embedding invalidation.
+Mutation tests deliberately corrupt these fields and must be rejected; a
+syntactically plausible timestamp or matching date bounds alone cannot pass.
 
 These are deterministic code oracles around a stochastic agent. Repeat runs and
 track pass rate before making them a release gate. Do not put an API key in this
@@ -46,6 +59,16 @@ Claude Code 2.1.260 exposes a first-party `claude plugin eval` command for
 isolated activation and no-plugin-baseline cases, but access is still gated as
 early access. Add that layer when it is enabled for the release environment.
 Its isolated cases will complement rather than replace this resumed lifecycle.
+
+## Sample disclosure fallback smoke check
+
+Run `pnpm eval:sample` to request a simple sample-data HTML table without asking
+for a label. A file-only host forces the documented standalone fallback. The
+check requires **Sample data** in body content before the readings, excluding
+comments/scripts/styles and the page title. It retains the HTML and transcript.
+This is a static content check, not browser/CSS or native Cowork visibility
+verification. It uses the same executable/model/budget overrides, defaults to
+Haiku/low with a $0.50 ceiling, and records the retrieval skill hash.
 
 This does **not** prove native Cowork rendering, library component behavior,
 dialogs, zoom, or live UI-state preservation. Run the separate native acceptance

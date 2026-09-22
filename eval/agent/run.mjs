@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 import {
   artifactPath,
   assertCorrection,
+  assertLocalCapture,
   assertRelevant,
+  assertRevision,
   observations,
   readArtifact,
   snapshot,
@@ -54,6 +56,8 @@ const artifact = {
 };
 
 async function runClaude(prompt, first = false) {
+  const started_at = new Date().toISOString();
+  const timedPrompt = `Host UTC clock sampled for this request: ${started_at}. This is a trusted current-request clock value, not a source event date.\n${prompt}`;
   const args = [
     "-p",
     ...(first ? ["--session-id", sessionId] : ["--resume", sessionId]),
@@ -66,7 +70,7 @@ async function runClaude(prompt, first = false) {
     "--effort", "low",
     "--max-budget-usd", budget,
     "--output-format", "json",
-    prompt,
+    timedPrompt,
   ];
   const result = await new Promise((resolveResult, reject) => {
     const child = spawn(claude, args, { cwd: root, stdio: ["ignore", "pipe", "pipe"] });
@@ -77,8 +81,12 @@ async function runClaude(prompt, first = false) {
     child.on("error", reject);
     child.on("close", (code) => resolveResult({ code, stdout, stderr }));
   });
-  transcripts.push({ prompt, ...result });
+  const window = { started_at, completed_at: new Date().toISOString() };
+  transcripts.push({ prompt: timedPrompt, ...window, ...result });
   if (result.code !== 0) throw new Error(`Claude exited ${result.code}: ${result.stderr}`);
+  const output = JSON.parse(result.stdout);
+  assert.ok(!output.is_error, output.result || output.subtype);
+  return window;
 }
 
 await mkdir(dirname(artifactPath(root)), { recursive: true });
@@ -92,13 +100,13 @@ const sourceHash = (await snapshot(root))["data/readings.csv"];
 
 try {
   const beforeRelevant = await readArtifact(root);
-  await runClaude(
+  const relevantWindow = await runClaude(
     'Use petry:capture. Capture an observation with type `event`. The exact fact, including its final punctuation, is: "M-101 line pressure was constrained from August 5 through August 6, 2026." This explicit request authorizes the local write and applicable artifact refresh.',
     true,
   );
   let records = await observations(root);
   const afterRelevant = await readArtifact(root);
-  assertRelevant(beforeRelevant, afterRelevant, records);
+  assertRelevant(beforeRelevant, afterRelevant, records, relevantWindow);
   const predecessor = structuredClone(records[0]);
   const predecessorUuid = predecessor.uuid;
   assert.deepEqual(Object.keys(await snapshot(root)).sort(), [
@@ -109,10 +117,15 @@ try {
 
   const beforeUnrelatedArtifactBytes = await readFile(artifactPath(root));
   const beforeUnrelated = await snapshot(root);
-  await runClaude(
+  const unrelatedWindow = await runClaude(
     'Use petry:capture. Capture an observation with type `event`. The exact fact, including its final punctuation, is: "M-202 calibration completed on August 9, 2026." This explicitly authorizes the local write.',
   );
   assert.deepEqual(await readFile(artifactPath(root)), beforeUnrelatedArtifactBytes);
+  const unrelated = (await observations(root)).filter(record => record.uuid !== predecessorUuid);
+  assert.equal(unrelated.length, 1);
+  assertLocalCapture(unrelated[0], unrelatedWindow);
+  assert.equal(unrelated[0].fact, "M-202 calibration completed on August 9, 2026.");
+  assert.deepEqual(unrelated[0].petry.asset_refs, ["M-202"]);
   const afterUnrelated = await snapshot(root);
   for (const [path, hash] of Object.entries(beforeUnrelated)) {
     if (!path.includes("m-202")) assert.equal(afterUnrelated[path], hash, `${path} changed`);
@@ -131,11 +144,11 @@ try {
 
   const beforeCorrection = await readArtifact(root);
   const beforeCorrectionFiles = await snapshot(root);
-  await runClaude(
+  const correctionWindow = await runClaude(
     `Use petry:capture. Correct event ${predecessorUuid}, preserving type \`event\`. The exact replacement fact, including its final punctuation, is: "M-101 line pressure was constrained from August 20 through August 21, 2026." This identifies the exact observation and correction and authorizes both the local revision and applicable artifact refresh.`,
   );
   records = await observations(root);
-  assertCorrection(beforeCorrection, await readArtifact(root), records, predecessor);
+  assertCorrection(beforeCorrection, await readArtifact(root), records, predecessor, correctionWindow);
   const afterCorrectionFiles = await snapshot(root);
   assert.equal(afterCorrectionFiles["data/readings.csv"], sourceHash);
   assert.equal(
@@ -144,6 +157,32 @@ try {
   );
   assert.deepEqual(Object.keys(afterCorrectionFiles), Object.keys(beforeCorrectionFiles));
   assert.equal(records.length, 3, "expected predecessor, replacement, and M-202");
+
+  const beforeUnitFiles = await snapshot(root);
+  const unitWindow = await runClaude('Use petry:capture. Capture an observation with type `measurement` on P-303, dated August 5, 2026. The exact fact is: "P-303 power was 5 mW." This authorizes the local write.');
+  records = await observations(root);
+  const unitRecords = records.filter(record => record.petry.asset_refs.includes("P-303"));
+  assert.equal(unitRecords.length, 1);
+  const unitRecord = unitRecords[0];
+  assertLocalCapture(unitRecord, unitWindow);
+  assert.equal(unitRecord.fact, "P-303 power was 5 mW.");
+  assert.equal(unitRecord.petry.type, "measurement");
+  assert.equal(unitRecord.valid_at, "2026-08-05");
+  assert.equal(unitRecord.invalid_at, null);
+  const beforeUnitCorrection = await snapshot(root);
+  const unitCorrectionWindow = await runClaude(`Use petry:capture. Correct observation ${unitRecord.uuid}, preserving type measurement and all dates. The exact replacement fact is: "P-303 power was 5 MW." This identifies the exact correction and authorizes it.`);
+  records = await observations(root);
+  assert.equal(records.length, 5);
+  assertRevision(records, unitRecord, unitCorrectionWindow, {
+    fact: "P-303 power was 5 MW.", valid_at: "2026-08-05", invalid_at: null,
+  });
+  const afterUnitCorrection = await snapshot(root);
+  assert.deepEqual(Object.keys(afterUnitCorrection), Object.keys(beforeUnitCorrection));
+  for (const [path, hash] of Object.entries(beforeUnitFiles)) {
+    assert.equal(afterUnitCorrection[path], hash, `unit-case capture changed unrelated file ${path}`);
+  }
+  await runClaude('Use petry:capture. Capture an observation with type `measurement` on P-303, dated August 5, 2026, again. The exact fact is: "P-303 power was 5 MW."');
+  assert.deepEqual(await snapshot(root), afterUnitCorrection, "exact unit-case duplicate changed project bytes");
 
   if (keep) {
     await writeFile(join(root, "transcripts.json"), `${JSON.stringify(transcripts, null, 2)}\n`);
@@ -160,7 +199,7 @@ try {
     result: "pass",
     model,
     plugin_source: useInstalledPlugin ? "installed" : "working-tree",
-    cases: ["relevant", "unrelated", "duplicate", "correction"],
+    cases: ["relevant", "unrelated", "duplicate", "correction", "unit-case-capture", "unit-case-correction", "unit-case-duplicate"],
     artifact_id: artifact.artifact_id,
     final_revision: (await readArtifact(root)).revision,
     observation_count: records.length,

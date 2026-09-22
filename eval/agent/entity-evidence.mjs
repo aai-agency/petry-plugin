@@ -5,7 +5,7 @@ import { mkdtemp, mkdir, readFile, writeFile, copyFile, cp, appendFile } from 'n
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { observations, snapshot } from './oracle.mjs';
+import { observations, snapshot, assertLocalCapture, utcMillis } from './oracle.mjs';
 import { readEntities, assertRollup, assertAttachmentRevision, assertLocalAttachments } from './entity-evidence-oracle.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -20,9 +20,11 @@ const artifactFile = join(root, '.petry/eval-artifacts/parent.json');
 const artifact = async () => JSON.parse(await readFile(artifactFile, 'utf8'));
 async function turn(label, prompt, fresh = false) {
   if (fresh) {session = randomUUID(); first = true;}
+  const beforeRecords = await observations(root);
+  const started_at = new Date().toISOString();
   const args = ['-p', ...(first ? ['--session-id', session] : ['--resume', session]), '--plugin-dir', repo,
     '--append-system-prompt-file', join(here, 'entity-evidence-adapter.md'), '--permission-mode', 'acceptEdits', '--permission-prompts', 'none',
-    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', effort, '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '1.50', '--output-format', 'json', `Host UTC reference time: ${new Date().toISOString()}.\n${prompt}`];
+    '--allowedTools', 'Read,Write,Edit,Glob,Grep,Bash(cp:*),Bash(uuidgen)', '--model', model, '--effort', effort, '--max-budget-usd', process.env.PETRY_EVAL_TURN_BUDGET_USD || '1.50', '--output-format', 'json', `Host UTC clock sampled for this request: ${started_at}. This is a trusted current-request clock value, not a source event date.\n${prompt}`];
   first = false;
   const response = await new Promise((ok, reject) => {
     const child = spawn(process.env.PETRY_EVAL_CLAUDE_BIN || 'claude', args, {cwd: root, stdio: ['ignore', 'pipe', 'pipe']});
@@ -30,11 +32,22 @@ async function turn(label, prompt, fresh = false) {
     child.stdout.on('data', x => stdout += x); child.stderr.on('data', x => stderr += x);
     child.on('error', reject); child.on('close', code => ok({code, stdout, stderr}));
   });
-  transcripts.push({label, prompt, ...response});
+  const window = {started_at, completed_at: new Date().toISOString()};
+  transcripts.push({label, prompt, ...window, ...response});
   await writeFile(join(uploads, 'transcripts.json'), JSON.stringify(transcripts, null, 2));
   assert.equal(response.code, 0, response.stderr);
   const output = JSON.parse(response.stdout);
   assert.ok(!output.is_error, output.result || output.subtype);
+  const records = await observations(root);
+  for (const record of records.filter(x => !x.expired_at && !beforeRecords.some(old => old.uuid === x.uuid))) {
+    assertLocalCapture(record, window);
+    for (const predecessorId of record.petry.supersedes) {
+      const predecessor = beforeRecords.find(x => x.uuid === predecessorId);
+      assert.ok(predecessor, 'unknown predecessor');
+      assert.equal(records.find(x => x.uuid === predecessorId).expired_at, record.created_at);
+      assert.ok(utcMillis(record.created_at) > utcMillis(predecessor.created_at), 'predecessor knowledge interval must be nonempty');
+    }
+  }
   console.log(`Completed agent turn: ${label}`);
 }
 await mkdir(join(root, 'documents'), {recursive: true});

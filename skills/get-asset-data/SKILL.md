@@ -19,6 +19,21 @@ petry is an instruction-only skill. Retrieve the user's data dynamically and
 build the result with Claude's artifact capabilities. Do not look for,
 execute, copy, or create plugin helper programs, plugin-bundled templates, or renderers.
 
+## Sample data disclosure checklist
+
+Before creating ANY artifact, including a simple table or standalone HTML file,
+determine whether any displayed readings are generated sample data. When they
+are, put a prominent **Sample data** label inside the artifact above the readings.
+This is mandatory when sample generation is authorized; do not ask for separate
+permission to add the label. A sample asset name, filename, code comment, or
+conversation reply is not a disclosure inside the artifact.
+
+Before reporting completion, read back the saved/generated artifact and verify
+that the label is present in its visible content. If missing, fix it before
+finishing. Keep the label in saved/exported copies and identify generated series
+in mixed real/sample views. Artifacts with only real readings need no sample
+label. Sample generation itself still requires the user's explicit request.
+
 Local file retrieval needs no petry account, subscription, database, or MCP.
 Do not gate it on the optional paid team service. If the user selects a shared
 MCP source, resolve its actual workspace and authorized scope through its tools;
@@ -1300,8 +1315,11 @@ Include:
   `EventTimeline` in all component-capable artifacts.
 - For grouped scopes, a filter-aware AI summary, aggregate KPIs, member ranking,
   and grouped event access with traceable drill-down to each contributing asset.
-- No sample, mock, demo, or synthetic-data banner unless the user explicitly
-  asks for that label. Keep source provenance neutral and factual.
+- Whenever the user authorizes sample, mock, demo, or synthetic data, prominently
+  label the generated artifact **Sample data** without requiring a separate
+  request for that label. Retain the disclosure in saved/exported copies and
+  distinguish generated series from real readings in mixed views. Do not add a
+  sample label to an artifact containing only real source data.
 - Render every petry product or brand label exactly as lowercase `petry`; never
   title-case or uppercase it in headings, badges, metadata, or provenance.
 
