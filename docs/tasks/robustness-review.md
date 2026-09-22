@@ -14,7 +14,7 @@ on main. The original checkout's untracked build directory is untouched.
 - [x] Preserve case and exact text in duplicate decisions; exercise unit case.
 - [x] Always label generated sample data without a separate label request.
 - [x] Run deterministic checks and the live capture lifecycle with strict oracles.
-- [ ] Review changes and deliver a pull request with verification evidence.
+- [x] Review changes and deliver a pull request with verification evidence.
 
 ## Decisions
 
@@ -38,7 +38,11 @@ on main. The original checkout's untracked build directory is untouched.
   byte-identical duplicates. CLI-reported cost: $1.6471014. The predecessor was
   recorded at 18:41:57.099Z and expired at 18:43:42.524Z, matching the successor's
   creation time. See [structured evidence](robustness-review-eval.json).
-- Entity/attachment evaluation with the new per-turn clock checks: in progress.
+- `pnpm eval:entities`: all 12 turns/eight scenario groups passed with Sonnet/high,
+  including binary preservation, parent refresh, edits/removal/retries, fresh
+  direct views, cycle rejection, and unsafe-path rejection. New observation
+  timestamps passed the actual per-turn execution-window checks. CLI-reported
+  cost: $16.4690436. Structured turn timing evidence is saved alongside capture results.
 - Live sample fallback smoke: the initial late-section labeling fix still yielded
   an unlabeled HTML table after the agent loaded the new skill. Added an early
   mandatory disclosure/read-back checklist. `pnpm eval:sample` then passed with
@@ -51,3 +55,8 @@ on main. The original checkout's untracked build directory is untouched.
 
 Native Cowork UI is a separate acceptance surface; the headless adapter cannot
 prove browser rendering, sample-banner visibility, or attachment preview behavior.
+
+## Delivery
+
+PR: https://github.com/aai-agency/petry-plugin/pull/23. Linux and Windows CI passed
+on the implementation commits. No merge, version bump, or marketplace release.

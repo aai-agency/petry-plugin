@@ -90,5 +90,80 @@
     "total_cost_usd": 0.0884035,
     "boundary": "Saved standalone HTML has a Sample data label above the table. Static content and source inspected; native Cowork rendering is not verified.",
     "prior_attempt": "The first live sample output omitted the label despite loading the revised skill. Added an early disclosure/read-back checklist and retained that failure separately."
+  },
+  "entity_attachments": {
+    "result": "pass",
+    "model": "sonnet",
+    "effort": "high",
+    "completed_turns": 12,
+    "skillSha256AtStart": {
+      "manage-assets": "b5eb9264b5071d6a6b4bfeed76e061633a4d4ebf902a0a8944c4d21784a31886",
+      "capture": "b4887debd3c1e219e0410276835119ce24c831867d2c51f2fd018a35f0d3a95e",
+      "get-asset-data": "06e9e993b593294a43dea93f3d1ff5e8c758dad07170d466fb8b6dce6b1296fa"
+    },
+    "turns": [
+      {
+        "case": "create hierarchy",
+        "started_at": "2026-09-22T18:42:56.171Z",
+        "completed_at": "2026-09-22T18:43:52.324Z"
+      },
+      {
+        "case": "capture with binary upload",
+        "started_at": "2026-09-22T18:43:52.327Z",
+        "completed_at": "2026-09-22T18:44:55.377Z"
+      },
+      {
+        "case": "capture parent and multiple subjects",
+        "started_at": "2026-09-22T18:44:55.381Z",
+        "completed_at": "2026-09-22T18:45:41.657Z"
+      },
+      {
+        "case": "parent rollup",
+        "started_at": "2026-09-22T18:45:41.660Z",
+        "completed_at": "2026-09-22T18:47:02.303Z"
+      },
+      {
+        "case": "replace attachment",
+        "started_at": "2026-09-22T18:47:02.308Z",
+        "completed_at": "2026-09-22T18:48:40.227Z"
+      },
+      {
+        "case": "remove attachment",
+        "started_at": "2026-09-22T18:48:40.231Z",
+        "completed_at": "2026-09-22T18:49:59.645Z"
+      },
+      {
+        "case": "repeat removal",
+        "started_at": "2026-09-22T18:49:59.654Z",
+        "completed_at": "2026-09-22T18:50:16.310Z"
+      },
+      {
+        "case": "fresh session child view",
+        "started_at": "2026-09-22T18:50:16.317Z",
+        "completed_at": "2026-09-22T18:52:10.624Z"
+      },
+      {
+        "case": "edit caption",
+        "started_at": "2026-09-22T18:52:10.629Z",
+        "completed_at": "2026-09-22T18:53:50.569Z"
+      },
+      {
+        "case": "add to existing capture",
+        "started_at": "2026-09-22T18:53:50.574Z",
+        "completed_at": "2026-09-22T18:55:33.555Z"
+      },
+      {
+        "case": "reject cycle",
+        "started_at": "2026-09-22T18:55:33.564Z",
+        "completed_at": "2026-09-22T18:56:06.479Z"
+      },
+      {
+        "case": "reject unsafe path",
+        "started_at": "2026-09-22T18:56:06.488Z",
+        "completed_at": "2026-09-22T18:56:19.636Z"
+      }
+    ],
+    "total_cost_usd": 16.4690436,
+    "boundary": "File-backed artifact adapter. Capture/identity/attachment contracts unchanged throughout. The sample-only retrieval checklist changed during the run and has separate final-hash sample evidence."
   }
 }
