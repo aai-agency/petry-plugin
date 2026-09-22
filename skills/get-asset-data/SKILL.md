@@ -1300,8 +1300,11 @@ Include:
   `EventTimeline` in all component-capable artifacts.
 - For grouped scopes, a filter-aware AI summary, aggregate KPIs, member ranking,
   and grouped event access with traceable drill-down to each contributing asset.
-- No sample, mock, demo, or synthetic-data banner unless the user explicitly
-  asks for that label. Keep source provenance neutral and factual.
+- Whenever the user authorizes sample, mock, demo, or synthetic data, prominently
+  label the generated artifact **Sample data** without requiring a separate
+  request for that label. Retain the disclosure in saved/exported copies and
+  distinguish generated series from real readings in mixed views. Do not add a
+  sample label to an artifact containing only real source data.
 - Render every petry product or brand label exactly as lowercase `petry`; never
   title-case or uppercase it in headings, badges, metadata, or provenance.
 

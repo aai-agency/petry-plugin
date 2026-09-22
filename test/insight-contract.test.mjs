@@ -107,6 +107,16 @@ test("instruction safety and migration boundaries cannot silently regress", () =
   assert.doesNotMatch(read("UPGRADE.md"), /import can be safely retried/);
 });
 
+test("capture requires verified clocks and exact duplicate comparisons", () => {
+  assert.match(capture, /fresh host-supplied timestamp explicitly provided for this request/);
+  assert.match(capture, /Never append Z to a local wall time/);
+  assert.match(capture, /strictly later than the predecessor's created_at/);
+  assert.match(capture, /leave the vault unchanged/);
+  assert.match(capture, /fact string \(case and whitespace preserved\)/);
+  assert.match(capture, /"5 mW" and "5 MW" are different assertions/);
+  assert.doesNotMatch(capture, /normalize whitespace\/case only for comparison/);
+});
+
 // These guard instruction presence, not executed host/model behavior. Native
 // acceptance evidence lives in docs/tasks/local-acceptance.md.
 test("local acceptance safeguards remain explicit in both workflows", () => {

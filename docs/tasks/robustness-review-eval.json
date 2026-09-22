@@ -1,0 +1,83 @@
+{
+  "result": "pass",
+  "model": "haiku",
+  "effort": "low",
+  "cases": [
+    "relevant",
+    "unrelated",
+    "duplicate",
+    "correction",
+    "unit-case-capture",
+    "unit-case-correction",
+    "unit-case-duplicate"
+  ],
+  "skillSha256": {
+    "capture": "b4887debd3c1e219e0410276835119ce24c831867d2c51f2fd018a35f0d3a95e",
+    "get-asset-data": "06e9e993b593294a43dea93f3d1ff5e8c758dad07170d466fb8b6dce6b1296fa",
+    "manage-assets": "b5eb9264b5071d6a6b4bfeed76e061633a4d4ebf902a0a8944c4d21784a31886"
+  },
+  "turns": [
+    {
+      "started_at": "2026-09-22T18:41:57.099Z",
+      "completed_at": "2026-09-22T18:43:04.047Z"
+    },
+    {
+      "started_at": "2026-09-22T18:43:04.051Z",
+      "completed_at": "2026-09-22T18:43:27.705Z"
+    },
+    {
+      "started_at": "2026-09-22T18:43:27.708Z",
+      "completed_at": "2026-09-22T18:43:42.523Z"
+    },
+    {
+      "started_at": "2026-09-22T18:43:42.524Z",
+      "completed_at": "2026-09-22T18:44:24.547Z"
+    },
+    {
+      "started_at": "2026-09-22T18:44:24.550Z",
+      "completed_at": "2026-09-22T18:44:39.640Z"
+    },
+    {
+      "started_at": "2026-09-22T18:44:39.642Z",
+      "completed_at": "2026-09-22T18:45:00.183Z"
+    },
+    {
+      "started_at": "2026-09-22T18:45:00.186Z",
+      "completed_at": "2026-09-22T18:45:08.336Z"
+    }
+  ],
+  "history": [
+    {
+      "fact": "M-101 line pressure was constrained from August 5 through August 6, 2026.",
+      "created_at": "2026-09-22T18:41:57.099Z",
+      "expired_at": "2026-09-22T18:43:42.524Z",
+      "captured_at": "2026-09-22T18:41:57.099Z"
+    },
+    {
+      "fact": "M-101 line pressure was constrained from August 20 through August 21, 2026.",
+      "created_at": "2026-09-22T18:43:42.524Z",
+      "expired_at": null,
+      "captured_at": "2026-09-22T18:43:42.524Z"
+    },
+    {
+      "fact": "M-202 calibration completed on August 9, 2026.",
+      "created_at": "2026-09-22T18:43:04.051Z",
+      "expired_at": null,
+      "captured_at": "2026-09-22T18:43:04.051Z"
+    },
+    {
+      "fact": "P-303 power was 5 mW.",
+      "created_at": "2026-09-22T18:44:24.550Z",
+      "expired_at": "2026-09-22T18:44:39.642Z",
+      "captured_at": "2026-09-22T18:44:24.550Z"
+    },
+    {
+      "fact": "P-303 power was 5 MW.",
+      "created_at": "2026-09-22T18:44:39.642Z",
+      "expired_at": null,
+      "captured_at": "2026-09-22T18:44:39.642Z"
+    }
+  ],
+  "total_cost_usd": 1.6471013999999997,
+  "boundary": "Headless file-backed artifact adapter; no native UI verification."
+}

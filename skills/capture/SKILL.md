@@ -21,6 +21,9 @@ plugin helper programs.
 ## Capture execution checklist
 
 Before claiming a save, verify these invariants from disk:
+- Obtain a fresh, verified UTC clock value for this mutation using the trusted
+  capture clock rules below. Never guess a timestamp or reuse an earlier turn's
+  clock. A correction must leave a nonempty predecessor knowledge interval.
 - Resolve registered entities first. New records use only canonical asset:<id>
   subjects and header; create the vault filename as `<asset-id>.md`, not a name
   slug. If an existing file already has the canonical header, reuse it.
@@ -834,6 +837,30 @@ flatten an EntityNode or EpisodicNode into an EntityEdge. Never claim graph
 creation, node resolution, embedding generation, or full graph import occurred
 just because a local note was written.
 
+## Trusted capture clock
+
+Before each material local write, obtain current UTC from an actual host clock
+tool or a fresh host-supplied timestamp explicitly provided for this request.
+Preserve its precision. A date-only system hint, example, source event time,
+file timestamp, or clock value from an earlier turn is not a current clock.
+Never append Z to a local wall time: convert a known offset to UTC, or obtain a
+UTC clock directly. Do not invent seconds, milliseconds, or an offset.
+
+Use this one verified mutation time for local created_at and petry.captured_at;
+for a correction/retraction also use it for predecessor.expired_at. The mutation
+time must be strictly later than the predecessor's created_at, so the prior
+version remains visible in an as-of view. If the clock is equal, stale, or behind
+the predecessor, obtain a newer actual clock sample; never fabricate an increment
+or rewrite the predecessor's creation time. If no trustworthy current clock is
+available, leave the vault unchanged and explain the missing host capability.
+Retries obtain a fresh clock only for a new material write; verified duplicates
+remain byte-preserving no-ops. Imported historical records retain their supplied
+knowledge times; this rule does not stamp imports with the current time.
+
+Read back the timestamps and check them against the sampled clock before
+reporting success. Keep reference_time separate: preserve a known source time,
+and use the trusted current-request reference for a direct session assertion.
+
 ## Temporal precision and history
 
 - Keep full timezone-aware ISO-8601 timestamps when supplied; normalize offsets
@@ -908,8 +935,8 @@ corrected registered-asset observations use canonical refs. An unchanged legacy
 observation is still a duplicate, not permission to recapture it under a new ref.
 
 Read all observations for the exact asset refs from both vault directories.
-An identical active assertion is a no-op: compare the asset refs, type, fact
-(normalize whitespace/case only for comparison), temporal kind, both world-time
+An identical active assertion is a no-op: compare the asset refs, type, exact
+fact string (case and whitespace preserved), temporal kind, both world-time
 bounds/precision/timezone, known graph identity, and substantive attributes and
 provenance. Ignore automatically generated capture/reference timestamps and new
 candidate UUIDs for local duplicate detection. Different bounds, evidence,
@@ -917,6 +944,13 @@ source, episode links, or metadata are not silently discarded as duplicates.
 An import with an existing UUID and identical payload is also a no-op; a UUID
 collision with different content needs reconciliation. Expired history is not
 an active duplicate. Never resurrect a retracted assertion without approval.
+
+Never case-fold facts, units, or identifiers for automatic duplicate suppression:
+"5 mW" and "5 MW" are different assertions. Exact/verbatim requests must not be
+discarded because a normalized or paraphrased sentence already exists. A similar
+sentence may warrant clarification or the correction workflow, but similarity
+alone never authorizes a no-op. Explicit corrections use the approved replacement
+text even when only letter case or whitespace changes.
 
 If the new fact conflicts with existing context, show the conflict and follow
 the correction approval rule instead of appending contradictory current facts.
