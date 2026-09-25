@@ -717,8 +717,13 @@ in the response. On partial failure preserve successful records, reconcile from
 disk on retry, reuse their IDs, and never announce the whole operation complete.
 Do not roll back by deleting data or overwrite concurrent work.
 
-A successful create/edit reports asset or template identity and project-relative
-saved path.
+A successful create/edit confirms the entity or template by its friendly name,
+type, and requested relationships, and says it was saved in the connected local
+project. Keep canonical refs, UUIDs, schema fields, and internal storage paths
+out of ordinary confirmations and lists. Provide those implementation details
+only when the user explicitly requests debugging, export, or storage information.
+For example: "Created North Field Expansion 2027 with NF-101 and Phase 1
+Engineering as members. Saved locally in your connected project."
 A source operation reports its name, supported capabilities, configured location,
 verification status and when checked. Keep these summaries free of secrets.
 Lists default to active assets; support explicit archived/all and source views.
