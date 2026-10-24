@@ -10,5 +10,8 @@
     "eval:agent": "node eval/agent/run.mjs",
     "eval:entities": "node eval/agent/entity-evidence.mjs",
     "eval:sample": "node eval/agent/sample-label.mjs"
+  },
+  "engines": {
+    "node": ">=24.22.1 <25"
   }
 }
